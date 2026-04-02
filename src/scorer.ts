@@ -33,9 +33,16 @@ export async function score(
   const accuracy = appFitness > previousAppFitness ? 1.0 : 0.0;
   const magnitude = Math.max(0, appFitness - previousAppFitness);
 
-  const eqs =
+  // EQS combines improvement signal with absolute performance
+  // Pure improvement formula: (accuracy * magnitude) / (branches * predError)
+  // Weighted with absolute fitness to reward stable high performance
+  const improvementSignal =
     (accuracy * magnitude) /
     Math.max(branchesExplored * predictionError, 0.001);
+
+  // Blend: 60% improvement signal + 40% absolute fitness
+  // This ensures agents that maintain high fitness aren't penalized
+  const eqs = 0.6 * improvementSignal + 0.4 * appFitness;
 
   const fitnessNode: FitnessNode = {
     "@context": "sevo://v1",
