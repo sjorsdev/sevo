@@ -1,0 +1,10 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Task",
+  "@id": "task:evolve-benchmark-v2-running-1775160685061",
+  "timestamp": "2026-04-02T20:11:25.061Z",
+  "description": "Create benchmark-v2 with increased difficulty. Add file I/O validation, error handling depth, and concurrency tests.",
+  "priority": 3,
+  "status": "running",
+  "dependsOn": []
+}
