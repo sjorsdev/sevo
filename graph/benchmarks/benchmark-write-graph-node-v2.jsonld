@@ -1,0 +1,12 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Benchmark",
+  "@id": "benchmark:write-graph-node-v2",
+  "timestamp": "2026-04-02T20:11:00.000Z",
+  "version": 2,
+  "parent": "benchmark:write-graph-node-v1",
+  "task": "Write a Deno TypeScript function that creates, validates, and persists JSON-LD SeVoNodes. Must handle concurrent writes, validate all field types including nested objects, enforce append-only semantics, and return detailed error types.",
+  "scoringLogic": "correctness(0.3) + typeSafety(0.2) + edgeCaseHandling(0.2) + concurrency(0.15) + errorGranularity(0.15)",
+  "difficulty": 2,
+  "passThreshold": 0.7
+}

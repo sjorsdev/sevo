@@ -1,0 +1,10 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Task",
+  "@id": "task:benchmark-v2-all",
+  "timestamp": "2026-04-02T20:12:00.000Z",
+  "description": "Run all active agents (v1, v2, v3) against benchmark-v2. Compare EQS scores for selection.",
+  "priority": 1,
+  "status": "pending",
+  "dependsOn": []
+}

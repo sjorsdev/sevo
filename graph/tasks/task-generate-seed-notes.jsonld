@@ -1,0 +1,10 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Task",
+  "@id": "task:generate-seed-notes",
+  "timestamp": "2026-04-02T20:12:00.000Z",
+  "description": "Generate seed improvement observations based on all fitness data and selection decisions so far. Write to graph/meta/.",
+  "priority": 4,
+  "status": "pending",
+  "dependsOn": []
+}
