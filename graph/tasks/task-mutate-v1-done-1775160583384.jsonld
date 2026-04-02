@@ -1,0 +1,11 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Task",
+  "@id": "task:mutate-v1-done-1775160583384",
+  "timestamp": "2026-04-02T20:09:43.384Z",
+  "description": "Propose and test first mutation of agent-v1. Measure EQS improvement.",
+  "priority": 2,
+  "status": "done",
+  "dependsOn": [],
+  "result": "{\"fitness\":1,\"branches\":1,\"correct\":6,\"total\":6}\n"
+}
