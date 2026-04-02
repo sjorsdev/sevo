@@ -1,0 +1,10 @@
+{
+  "@context": "sevo://v1",
+  "@type": "SeedImprovement",
+  "@id": "seed-improvement:001",
+  "timestamp": "2026-04-02T20:13:00.000Z",
+  "observation": "The evolution loop currently runs each agent on the same benchmark blueprint regardless of task description. The agent blueprint is a self-contained test suite, not a task-specific solver. This means EQS only measures improvement in the agent's self-test score, not improvement in solving diverse tasks.",
+  "suggestion": "Seed v2 should separate the agent blueprint (the solver) from the benchmark (the test). The runner should pass task context to the agent as input (e.g. via stdin or env vars), and the benchmark should evaluate the agent's output against expected results.",
+  "evidence": ["fitness-agent-v1-cycle-1775160494347", "fitness-agent-v2-cycle-1775160685058"],
+  "priority": 1
+}

@@ -1,0 +1,10 @@
+{
+  "@context": "sevo://v1",
+  "@type": "SeedImprovement",
+  "@id": "seed-improvement:002",
+  "timestamp": "2026-04-02T20:13:00.000Z",
+  "observation": "The scorer compares appFitness against the previous run's appFitness. For deterministic agents (same code, same tests), this always yields 0 improvement after the first run. Evolution only measures delta, not absolute performance.",
+  "suggestion": "Seed v2 should include both absolute fitness (how well the agent performs) and relative fitness (how much it improved). EQS should weight both: stable high performance is valuable, not just improvement spikes.",
+  "evidence": ["fitness-agent-v1-cycle-1775160494450", "fitness-agent-v2-cycle-1775160685166"],
+  "priority": 2
+}

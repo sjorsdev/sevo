@@ -1,0 +1,10 @@
+{
+  "@context": "sevo://v1",
+  "@type": "SeedImprovement",
+  "@id": "seed-improvement:003",
+  "timestamp": "2026-04-02T20:13:00.000Z",
+  "observation": "The getBestAgent function picks the agent with the highest recent EQS. Since all agents score EQS=0 after their first run (no improvement), the selector effectively picks arbitrarily. It should consider which agent has the highest absolute fitness, not just improvement rate.",
+  "suggestion": "Seed v2 should rank agents by a composite of absolute fitness and EQS trend. An agent that consistently scores fitness=1.0 should be ranked higher than one that scored 0.8 once with a higher EQS spike.",
+  "evidence": [],
+  "priority": 2
+}
