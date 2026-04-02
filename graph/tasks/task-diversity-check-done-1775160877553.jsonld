@@ -1,0 +1,11 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Task",
+  "@id": "task:diversity-check-done-1775160877553",
+  "timestamp": "2026-04-02T20:14:37.553Z",
+  "description": "Verify constitutional constraint II: at least MIN_ACTIVE_VARIANTS agents are active and no agent controls more than MAX_RESOURCE_SHARE of selections.",
+  "priority": 2,
+  "status": "done",
+  "dependsOn": [],
+  "result": "{\"fitness\":1,\"branches\":1,\"correct\":10,\"total\":10}\n"
+}
