@@ -1,0 +1,11 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Task",
+  "@id": "task:benchmark-v1-done-1775160494519",
+  "timestamp": "2026-04-02T20:08:14.519Z",
+  "description": "Run agent-v1 against benchmark write-graph-node-v1. Measure EQS and establish baseline fitness.",
+  "priority": 1,
+  "status": "done",
+  "dependsOn": [],
+  "result": "{\"fitness\":1,\"branches\":1,\"correct\":6,\"total\":6}\n"
+}
