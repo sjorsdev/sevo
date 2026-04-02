@@ -1,0 +1,11 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Task",
+  "@id": "task:evolve-benchmark-done-1775160583492",
+  "timestamp": "2026-04-02T20:09:43.492Z",
+  "description": "After agent-v1 passes benchmark-v1, increase benchmark difficulty. Create benchmark-v2.",
+  "priority": 3,
+  "status": "done",
+  "dependsOn": [],
+  "result": "{\"fitness\":1,\"branches\":1,\"correct\":6,\"total\":6}\n"
+}
