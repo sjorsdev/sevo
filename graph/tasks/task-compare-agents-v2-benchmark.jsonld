@@ -1,0 +1,10 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Task",
+  "@id": "task:compare-agents-v2-benchmark",
+  "timestamp": "2026-04-02T20:14:00.000Z",
+  "description": "Run all three agents (v1, v2, v3) against benchmark-v2. Record and compare fitness scores. The agent with highest test coverage and error handling wins.",
+  "priority": 1,
+  "status": "pending",
+  "dependsOn": []
+}
