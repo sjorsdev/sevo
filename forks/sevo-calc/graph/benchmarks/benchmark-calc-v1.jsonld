@@ -1,0 +1,11 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Benchmark",
+  "@id": "benchmark-calc-v1",
+  "timestamp": "2026-04-03T05:35:00.000Z",
+  "version": 1,
+  "task": "Implement a mathematical expression evaluator that handles: basic arithmetic (+,-,*,/), operator precedence, parentheses, unary negation, whitespace handling, and error reporting for invalid expressions. Must handle edge cases: division by zero, empty input, mismatched parens, nested parens, floating point precision.",
+  "scoringLogic": "correctness(0.4) + edgeCases(0.3) + performance(0.2) + codeQuality(0.1)",
+  "difficulty": 1,
+  "passThreshold": 0.6
+}

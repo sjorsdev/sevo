@@ -1,0 +1,10 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Agent",
+  "@id": "agent:calc-v1",
+  "timestamp": "2026-04-03T05:35:00.000Z",
+  "blueprint": "./forks/sevo-calc/blueprints/calc-agent-v1.ts",
+  "generation": 1,
+  "status": "active",
+  "domain": "sevo-calc"
+}

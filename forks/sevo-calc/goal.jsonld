@@ -1,0 +1,10 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Goal",
+  "@id": "goal:expression-evaluator",
+  "name": "Evolve a robust mathematical expression evaluator",
+  "metric": "Correctness × edge-case coverage × performance",
+  "antiGaming": "Test against randomized expression inputs, verified by reference implementation",
+  "sevoGoal": "goal:evolution-quality",
+  "note": "Application fork goal. Tests whether domain-specific evolution produces insights that improve core EQS."
+}
