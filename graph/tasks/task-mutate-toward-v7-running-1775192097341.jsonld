@@ -1,0 +1,10 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Task",
+  "@id": "task:mutate-toward-v7-running-1775192097341",
+  "timestamp": "2026-04-03T04:54:57.341Z",
+  "description": "Propose agent-v7 mutation. Target: add load testing (100+ concurrent operations) and prediction capability (agent predicts its own EQS before running).",
+  "priority": 2,
+  "status": "running",
+  "dependsOn": []
+}
