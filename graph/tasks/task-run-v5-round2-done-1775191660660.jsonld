@@ -1,0 +1,11 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Task",
+  "@id": "task:run-v5-round2-done-1775191660660",
+  "timestamp": "2026-04-03T04:47:40.660Z",
+  "description": "Second run of agent-v5. Verify EQS reflects stable high fitness.",
+  "priority": 2,
+  "status": "done",
+  "dependsOn": [],
+  "result": "{\"fitness\":1,\"branches\":1,\"correct\":14,\"total\":14}\n"
+}
