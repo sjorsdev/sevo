@@ -1,0 +1,11 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Crossover",
+  "@id": "crossover-agent-v6-agent-v5-1775213571870",
+  "timestamp": "2026-04-03T10:52:51.871Z",
+  "parent1": "agent:v6",
+  "parent2": "agent:v5",
+  "child": "agent:v7",
+  "strategy": "llm-guided-crossover",
+  "fitness": 0
+}
