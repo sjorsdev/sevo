@@ -39,19 +39,22 @@ export async function run(
 ): Promise<RunResult> {
   const start = Date.now();
 
-  const args: string[] = [
-    "run",
-    `--allow-read=${permissions.read.join(",")}`,
-    `--allow-write=${permissions.write.join(",")}`,
-  ];
+  const args: string[] = ["run"];
 
+  if (permissions.read.length) {
+    args.push(`--allow-read=${permissions.read.join(",")}`);
+  }
+  if (permissions.write.length) {
+    args.push(`--allow-write=${permissions.write.join(",")}`);
+  }
   if (permissions.network.length) {
     args.push(`--allow-net=${permissions.network.join(",")}`);
   } else {
     args.push("--deny-net");
   }
-
-  args.push(`--allow-env=${permissions.env.join(",")}`);
+  if (permissions.env.length) {
+    args.push(`--allow-env=${permissions.env.join(",")}`);
+  }
   args.push(blueprint);
 
   const cmd = new Deno.Command("deno", {
