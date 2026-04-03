@@ -1,0 +1,10 @@
+{
+  "@context": "sevo://v1",
+  "@type": "SeedImprovement",
+  "@id": "research-evolution-strategies-1",
+  "timestamp": "2026-04-03T05:30:00.000Z",
+  "observation": "Current single-population mutate-best loop converges prematurely. All agents achieve fitness=1.0 but EQS stagnates. System lacks exploration diversity and gets trapped in local optima.",
+  "suggestion": "Implement multi-strategy evolution: (1) Island model with 3+ independent populations using different mutation strategies, (2) LLM-guided crossover between top agents from different islands, (3) Novelty search using K-nearest behavioral distance to reward unique approaches, (4) Adaptive mutation rates that increase exploration when stuck and decrease when improving, (5) Meta-evolution tracking which strategies succeed and evolving the strategy parameters themselves.",
+  "evidence": ["selection-v6-over-v5", "fitness-agent-v4-cycle-1775192352387", "fitness-agent-v6-cycle-1775192900342"],
+  "priority": 1
+}
