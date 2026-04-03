@@ -1,0 +1,12 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Novelty",
+  "@id": "novelty-agent-v34-1775212948285-cycle-1775213100939",
+  "timestamp": "2026-04-03T10:45:02.537Z",
+  "agent": "agent:v34-1775212948285",
+  "behaviorSignature": "t25-b2-s0-p0",
+  "noveltyScore": 0.075,
+  "strategies": [],
+  "testCount": 25,
+  "uniquePatterns": []
+}
