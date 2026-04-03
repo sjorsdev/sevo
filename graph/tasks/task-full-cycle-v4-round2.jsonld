@@ -1,0 +1,10 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Task",
+  "@id": "task:full-cycle-v4-round2",
+  "timestamp": "2026-04-03T04:45:00.000Z",
+  "description": "Second round: run the best agent, score EQS, propose another mutation. Track improvement trend.",
+  "priority": 2,
+  "status": "pending",
+  "dependsOn": []
+}
