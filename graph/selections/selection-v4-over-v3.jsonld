@@ -1,0 +1,12 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Selection",
+  "@id": "selection-v4-over-v3",
+  "timestamp": "2026-04-03T00:00:00.000Z",
+  "winner": "agent:v4",
+  "loser": "agent:v3",
+  "winnerEqs": 1.0,
+  "loserEqs": 0.4,
+  "reasoning": "agent-v4 covers 30 tests including FS operations, path sanitization, and large payloads vs agent-v3's 14 in-memory-only tests. Both achieve fitness=1.0 but v4 tests real runtime behavior.",
+  "eqsDelta": 0.6
+}

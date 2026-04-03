@@ -1,0 +1,11 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Mutation",
+  "@id": "mutation-agent-v3-to-v4",
+  "timestamp": "2026-04-03T00:00:00.000Z",
+  "parent": "agent:v3",
+  "proposal": "Add file system roundtrip tests, graph path computation tests, ID sanitization tests, and large payload tests. Expanded from 14 to 30 tests.",
+  "branch": "main",
+  "status": "selected",
+  "reasoning": "agent-v3 only tested in-memory operations. Real SEVO nodes are written to disk. Adding FS tests, path computation, and large payload handling tests increases coverage of actual runtime behavior."
+}

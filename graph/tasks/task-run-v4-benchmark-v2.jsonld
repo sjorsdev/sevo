@@ -1,0 +1,10 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Task",
+  "@id": "task:run-v4-benchmark-v2",
+  "timestamp": "2026-04-03T00:00:00.000Z",
+  "description": "Run agent-v4 against benchmark-v2 and record fitness. Agent-v4 has 30 tests including FS, path sanitization, and large payloads.",
+  "priority": 1,
+  "status": "pending",
+  "dependsOn": []
+}

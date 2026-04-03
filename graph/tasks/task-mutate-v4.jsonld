@@ -1,0 +1,10 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Task",
+  "@id": "task:mutate-v4",
+  "timestamp": "2026-04-03T00:00:00.000Z",
+  "description": "Use claude CLI mutator to propose and apply a mutation to agent-v4. Test the mutant. If better, select it.",
+  "priority": 2,
+  "status": "pending",
+  "dependsOn": []
+}
