@@ -1,0 +1,11 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Mutation",
+  "@id": "mutation-crossover-1775213571870",
+  "timestamp": "2026-04-03T10:52:51.902Z",
+  "parent": "agent:v6",
+  "proposal": "Crossover of agent:v6 × agent:v5",
+  "branch": "main",
+  "status": "testing",
+  "reasoning": "Crossover combining strengths of both parents. Strategy: conservative, aggressiveness: 0.1"
+}
