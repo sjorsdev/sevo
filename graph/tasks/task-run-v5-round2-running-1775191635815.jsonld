@@ -1,0 +1,10 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Task",
+  "@id": "task:run-v5-round2-running-1775191635815",
+  "timestamp": "2026-04-03T04:47:15.815Z",
+  "description": "Second run of agent-v5. Verify EQS reflects stable high fitness.",
+  "priority": 2,
+  "status": "running",
+  "dependsOn": []
+}
