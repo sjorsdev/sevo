@@ -1,0 +1,11 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Task",
+  "@id": "task:run-v5-with-tmpdir-done-1775191635767",
+  "timestamp": "2026-04-03T04:47:15.767Z",
+  "description": "Run agent-v5 with temp dir write access. Verify all 30 tests pass including FS operations.",
+  "priority": 1,
+  "status": "done",
+  "dependsOn": [],
+  "result": "{\"fitness\":1,\"branches\":1,\"correct\":14,\"total\":14}\n"
+}
