@@ -1,0 +1,14 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Novelty",
+  "@id": "novelty-agent-v5-cycle-1775193510758",
+  "timestamp": "2026-04-03T05:18:31.159Z",
+  "agent": "agent:v5",
+  "behaviorSignature": "t30-b3-s1-p0",
+  "noveltyScore": 0.3680555555555555,
+  "strategies": [
+    "{\"fitness\":1,\"branches\":3,\"correct\":30,\"total\":30,\"winningStrategy\":\"strict-upfront\"}"
+  ],
+  "testCount": 30,
+  "uniquePatterns": []
+}
