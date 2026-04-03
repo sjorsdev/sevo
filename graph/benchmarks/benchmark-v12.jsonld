@@ -1,0 +1,12 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Benchmark",
+  "@id": "benchmark-v12",
+  "timestamp": "2026-04-03T10:47:22.974Z",
+  "version": 12,
+  "parent": "benchmark-v11",
+  "task": "Implement asynchronous Byzantine-resilient consensus with finality proofs, cryptographic quorum certification, and epoch-safe reconfiguration. Extend v11 by requiring: (1) Finality Certificates—blocks become final only when signed by >2/3 weighted stake; implement BLS threshold signature aggregation and prove a finalized block can *never* be reverted, even if >1/3 validators later equivocate; (2) Cryptographic Quorum Proofs—every consensus decision must include a cert proving >2/3-stake Byzantine quorum signed the block; verify signatures in the consensus verification logic, not just specification; (3) View-Change Invariants—across leader elections, prove (a) no two different blocks can both be finalized in the same epoch, (b) finality certs from epoch N remain valid in epoch N+1, (c) a validator switching leaders cannot cause a revert; provide machine-verifiable proofs for all three; (4) Epoch Transition Atomicity—prove that reconfiguration from epoch E to E+1 is atomic: either old validator set commits and new set inherits all finality invariants, or neither happens (no intermediate states where finality breaks); (5) Slashing Proof Accumulation—require that equivocation evidence collected during epoch E is cryptographically committed in a finality cert at epoch E boundary, proving slashing decisions are globally consistent and cannot be arbitrarily delayed; (6) Liveness Recovery SLA—prove that after any valid epoch transition, the system reaches finality within 2*GST rounds with probability >0.99, even if up to 1/3 stake is offline.",
+  "scoringLogic": "finalityCertificateCorrectness(0.16) + quorumProofCrypto(0.15) + viewChangeInvariantProofs(0.14) + epochTransitionAtomicity(0.14) + slashingAccumulationBinding(0.13) + livenessRecoverySLAProof(0.12) + equivocationUndetectability(0.10) + benchmarkPassance(0.06)",
+  "difficulty": 12,
+  "passThreshold": 0.95
+}
