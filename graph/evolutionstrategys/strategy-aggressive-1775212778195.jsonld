@@ -1,0 +1,14 @@
+{
+  "@context": "sevo://v1",
+  "@type": "EvolutionStrategy",
+  "@id": "strategy-aggressive-1775212778195",
+  "timestamp": "2026-04-03T10:39:38.195Z",
+  "name": "aggressive",
+  "mutationRate": 0.75,
+  "crossoverRate": 0.3,
+  "selectionPressure": 5,
+  "noveltyWeight": 0.15000000000000002,
+  "successRate": 0.0625,
+  "totalTrials": 16,
+  "successfulTrials": 1
+}
