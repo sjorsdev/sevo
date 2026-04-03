@@ -1,0 +1,12 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Benchmark",
+  "@id": "benchmark-v6",
+  "timestamp": "2026-04-03T10:18:55.162Z",
+  "version": 6,
+  "parent": "benchmark-v5",
+  "task": "Implement distributed consensus-based JSON-LD SeVoNode storage with strict latency SLAs, atomic multi-node transactions, and Byzantine-resilient garbage collection. Must satisfy all v5 requirements plus: (1) Raft-like distributed consensus — maintain 3-replica quorum across simulated network conditions, reject writes without quorum, recover from partitions using quorum rules; (2) Atomic transactions — multi-node writes must be all-or-nothing with rollback on any failure, transaction log must be immutable, in-flight transactions must survive crashes; (3) Latency SLAs — writes must complete in <150ms (replication + fsync), reads in <20ms (in-memory or cache), violations cause -0.05 fitness penalty per violation; (4) Garbage collection — implement mark-and-sweep across active node references (causal graph + vector clocks), prove no node is deleted while still referenced, handle concurrent mutations during sweep; (5) Digital signatures — every node must be signed with Ed25519, signature verification on read must succeed, detect tampering, support key rotation without breaking old signatures; (6) Partition recovery — detect network splits, implement quorum-based fencing, safely recover without divergent replicas, prove linearizability of all ops post-recovery.",
+  "scoringLogic": "correctness(0.20) + consensus(0.18) + latencySLA(0.15) + transactionality(0.12) + gcSafety(0.12) + cryptography(0.10) + partitionRecovery(0.10) + schemaEvolution(0.03)",
+  "difficulty": 6,
+  "passThreshold": 0.9000000000000001
+}
