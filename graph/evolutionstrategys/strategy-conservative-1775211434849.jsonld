@@ -1,0 +1,14 @@
+{
+  "@context": "sevo://v1",
+  "@type": "EvolutionStrategy",
+  "@id": "strategy-conservative-1775211434849",
+  "timestamp": "2026-04-03T10:17:14.849Z",
+  "name": "conservative",
+  "mutationRate": 0.2,
+  "crossoverRate": 0.1,
+  "selectionPressure": 2,
+  "noveltyWeight": 0.1,
+  "successRate": 0,
+  "totalTrials": 11,
+  "successfulTrials": 0
+}
