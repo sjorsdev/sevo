@@ -1,0 +1,11 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Mutation",
+  "@id": "mutation-agent-v2-1775212277968-selected",
+  "timestamp": "2026-04-03T10:31:18.147Z",
+  "parent": "agent:v2",
+  "proposal": "LLM-generated crossover mutation (rate 0.20)",
+  "branch": "main",
+  "status": "selected",
+  "reasoning": "Strategy: crossover. Make CONSERVATIVE changes — fine-tune existing strategies, fix edge cases, improve efficiency."
+}
