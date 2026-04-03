@@ -1,0 +1,10 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Task",
+  "@id": "task:full-cycle-all-agents",
+  "timestamp": "2026-04-03T05:10:00.000Z",
+  "description": "Run a complete evolution cycle: execute best agent, score EQS, propose mutation via claude CLI. Verify the full pipeline works end-to-end.",
+  "priority": 1,
+  "status": "pending",
+  "dependsOn": []
+}
