@@ -1,0 +1,12 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Novelty",
+  "@id": "novelty-mutant-island-beta-cycle-1775213243038",
+  "timestamp": "2026-04-03T10:49:41.629Z",
+  "agent": "mutant-island-beta",
+  "behaviorSignature": "t15-b5-s0-p0",
+  "noveltyScore": 0.14166666666666666,
+  "strategies": [],
+  "testCount": 15,
+  "uniquePatterns": []
+}
