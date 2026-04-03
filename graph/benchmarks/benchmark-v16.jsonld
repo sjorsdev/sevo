@@ -1,0 +1,12 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Benchmark",
+  "@id": "benchmark-v16",
+  "timestamp": "2026-04-03T11:00:39.549Z",
+  "version": 16,
+  "parent": "benchmark-v15",
+  "task": "Implement Byzantine-resilient consensus (v16) extending v15 with: (1) Cryptographically-Verified Timing Bounds—prove that consensus is reached within T rounds; use BLS signature aggregation to prove quorum commitment times and detect validators exceeding T; attach cryptographic proofs of round adherence to blocks; (2) Byzantine Leader with Adaptive Latency—leader can equivocate or delay any message up to T/2 rounds; non-leaders must detect leader byzantine behavior within 1 round and trigger automated leader rotation with provable safety (no safety violation during rotation); (3) Superquorum Finality Gadget—require 2/3+1 of CURRENT validator set to cryptographically sign finality checkpoints; handle concurrent validator adds/removes such that finality is atomic w.r.t. configuration changes; (4) Total Order Causal Delivery—prove agents deliver blocks in identical total order AND maintain causal-consistency (if block B depends on A, all agents receive A before B); provide merkle-path proofs for both properties; (5) Byzantine Validator Isolation with Slashing Predicates—automatically identify validators producing contradictory signed statements; emit cryptographic slashing proofs that can be verified offline; prove that slashing cannot be falsely triggered (no slashing of honest validators).",
+  "scoringLogic": "cryptographicTimingProofs(0.16) + leaderByzantineDetectionLatency(0.14) + superquorumFinalityAtomicity(0.16) + totalOrderCausalProofs(0.16) + validatorSlashingPredicateCorrectness(0.15) + concurrentReconfigSafety(0.13)",
+  "difficulty": 16,
+  "passThreshold": 0.95
+}
