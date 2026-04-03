@@ -1,8 +1,0 @@
-{
-  "@context": "sevo://v1",
-  "@type": "Goal",
-  "@id": "goal:sevo-life",
-  "name": "Survival + Beauty",
-  "metric": "composite: 0.5 * survivalRate + 0.3 * beautyScore + 0.2 * efficiency",
-  "note": "Entities must survive in a resource-constrained 2D world while creating beautiful trail patterns. Fitness is a blend of survival capability and aesthetic output. Neither pure survival nor pure aesthetics alone achieves maximum fitness — agents must balance both."
-}
