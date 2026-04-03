@@ -1,0 +1,12 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Benchmark",
+  "@id": "benchmark-v11",
+  "timestamp": "2026-04-03T10:45:00.880Z",
+  "version": 11,
+  "parent": "benchmark-v10",
+  "task": "Implement asynchronous Byzantine-resilient consensus with weighted stake, dynamic reconfiguration, and equivocation-slashing. Extend v10 by adding: (1) Asynchronous safety (remove GST assumption)—prove safety holds even if network delays are unbounded and adversary controls timing; prove safety under any message schedule (including adversarially delayed or reordered messages); (2) Weighted Byzantine Tolerance—generalize to f < (1/3)·total_stake, not f < n/3 nodes; prove safety and liveness for stake-weighted quorums; (3) Dynamic reconfiguration—add/remove validators and update stake weights mid-execution; prove safety across reconfig epochs and that reconfig commits atomically with consensus; (4) Equivocation detection and automated slashing—detect when validator signs conflicting values for same slot; prove slashing cannot occur for correct validators; implement deterministic slashing schedule triggered by auditable proof; (5) Recovery SLA—prove finality within K blocks of honest leader (compute K as function of n, f, stake distribution); characterize when K is achievable vs impossible. Scoring logic: asynchronousSafetyProof(0.15) + messageScheduleUniversality(0.13) + stakeWeightedQuorums(0.14) + reconfigEpochSafety(0.13) + equivocationDetection(0.12) + slashingCorrectness(0.11) + recoverySLAAnalysis(0.12). Agents must provide: formal safety proof under asynchrony model, weighted threshold analysis, reconfig invariants, slashing trigger logic with proof-of-equivocation format, and recovery time characterization. All proofs must be constructive (executable oracle) or mechanized (Coq/Lean fragment).",
+  "scoringLogic": "asynchronousSafetyProof(0.15) + messageScheduleUniversality(0.13) + stakeWeightedQuorums(0.14) + reconfigEpochSafety(0.13) + equivocationDetection(0.12) + slashingCorrectness(0.11) + recoverySLAAnalysis(0.12). Partial credit: missing any component caps at 0.70; equivocation slashing incorrect or unsafe caps entire score at 0.55.",
+  "difficulty": 11,
+  "passThreshold": 0.95
+}
