@@ -1,0 +1,10 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Task",
+  "@id": "task:create-benchmark-v3-running-1775191202124",
+  "timestamp": "2026-04-03T04:40:02.124Z",
+  "description": "Create benchmark-v3 with difficulty 3. Add requirements: schema validation (check all required fields per node type), cross-node reference validation, and performance under load (100+ concurrent operations).",
+  "priority": 3,
+  "status": "running",
+  "dependsOn": []
+}
