@@ -1,0 +1,12 @@
+{
+  "@context": "sevo://v1",
+  "@type": "Benchmark",
+  "@id": "benchmark-v9",
+  "timestamp": "2026-04-03T10:40:27.017Z",
+  "version": 9,
+  "parent": "benchmark-v8",
+  "task": "Implement leaderless Byzantine-resilient consensus with formal safety proof, dynamic reconfiguration, and probabilistic latency bounds. Build on v8 by adding: (1) Leaderless protocol — no distinguished leader; all nodes propose blocks equally into a DAG; consensus emerges from causal order and quorum intersection; prove safety without primary assumption; (2) Formal safety proof in temporal logic — provide rigorous proof (TLA+ or LTL) that no two honest nodes finalize conflicting histories; proof must handle asynchronous faults, Byzantine nodes ⌊(n-1)/3⌋, and partition scenarios; (3) Dynamic reconfiguration — nodes can join/leave at runtime; new config takes effect only after old nodes confirm epoch boundary; prove safety across config changes (no double-finalization across epochs); (4) Cryptographic Byzantine proof — honest nodes must be able to collectively prove when a node behaves Byzantinely (e.g., equivocation detection); commitments must be unforgeable under ECDSA; (5) Probabilistic latency bounds — prove expected finality time is O(f) rounds in good conditions, with < 5% probability of delay > 100 rounds in adversarial periods; (6) Atomic cross-shard reconfiguration — reconfig changes must apply consistently across all shards; multi-shard rollback on config change failure.",
+  "scoringLogic": "leaderlessSafety(0.18) + formalProof(0.16) + reconfigurationCorrectness(0.15) + byzantineProof(0.14) + latencyBounds(0.12) + crossShardConsistency(0.11) + epochTransition(0.07) + equivocationDetection(0.07)",
+  "difficulty": 9,
+  "passThreshold": 0.95
+}
