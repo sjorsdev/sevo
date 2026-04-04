@@ -8,6 +8,7 @@ import { score } from "./scorer.ts";
 import { select } from "./selector.ts";
 import { git } from "./git.ts";
 import { getLatestBenchmark } from "./benchmark.ts";
+import { computeSevoScore } from "./sevoscore.ts";
 import type {
   AgentNode,
   FitnessNode,
@@ -916,6 +917,10 @@ while (true) {
       );
     }
   }
+
+  // --- SevoScore ---
+  console.log("\n--- SevoScore ---");
+  await computeSevoScore(cycleId, best.agent["@id"], best.fitness.eqs, avgFitness);
 
   // --- Checkpoint ---
   await writeProgress(
