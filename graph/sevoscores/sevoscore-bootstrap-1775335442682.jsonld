@@ -1,0 +1,32 @@
+{
+  "@context": "sevo://v1",
+  "@type": "SevoScore",
+  "@id": "sevoscore-bootstrap-1775335442682",
+  "timestamp": "2026-04-04T20:44:02.860Z",
+  "cycleId": "bootstrap-1775335442682",
+  "score": 596.896663594336,
+  "cyclePoints": 596.896663594336,
+  "breakdown": {
+    "agentsCreated": 48,
+    "agentsImproved": 37,
+    "fitnessEvaluations": 0,
+    "mutationsProposed": 60,
+    "selectionsMade": 37,
+    "noveltysRecorded": 276,
+    "crossoversPerformed": 18,
+    "seedImprovements": 1,
+    "benchmarksEvolved": 16,
+    "improvementBonus": 89.89666359433602
+  },
+  "metadata": {
+    "totalAgents": 48,
+    "activeAgents": 22,
+    "bestAgentId": "agent:v1",
+    "bestEqs": 1,
+    "avgFitness": 0.49991687889748065,
+    "maxBenchmarkDifficulty": 16,
+    "evolvedLoc": 9457,
+    "model": "claude-haiku-4-5",
+    "domain": "Improve evolutionary selection quality"
+  }
+}
