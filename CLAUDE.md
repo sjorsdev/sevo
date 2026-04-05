@@ -715,6 +715,20 @@ export interface SevoScoreNode extends SeVoNode {
 The function reads graph data, computes the score, and writes a SevoScoreNode
 to `graph/sevoscores/`. The sevoagents.com leaderboard reads this directory.
 
+**Auto-publish to leaderboard** (optional, recommended):
+```typescript
+import { computeSevoScore, publishScore } from "sevo-score";
+
+const result = await computeSevoScore(input, graph, git);
+await publishScore(result.node, { name: "My Project" });
+// Fire-and-forget — logs errors, never throws, never blocks evolution
+```
+
+**Links**:
+- npm: https://www.npmjs.com/package/sevo-score
+- GitHub: https://github.com/sjorsdev/sevo-score
+- Leaderboard: https://sevo-web-964388148061.europe-west1.run.app/score
+
 ---
 
 ## mutator.ts — LLM-driven mutation via claude CLI
