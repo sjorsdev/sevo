@@ -41,6 +41,36 @@ async function readDomain(): Promise<string> {
   }
 }
 
+/**
+ * Detect fork point from git history.
+ * If goal.jsonld was modified after its initial creation, this repo was forked
+ * from another sevo project. The modification timestamp is the fork point —
+ * only graph nodes created after that point belong to this project.
+ * Returns null for original (non-forked) projects where goal.jsonld was only
+ * ever created once.
+ */
+async function detectForkPoint(): Promise<string | null> {
+  try {
+    // Get all commits that touched goal.jsonld, newest first
+    const cmd = new Deno.Command("git", {
+      args: ["log", "--format=%aI", "--", "goal.jsonld"],
+      stdout: "piped",
+      stderr: "piped",
+    });
+    const result = await cmd.output();
+    const timestamps = new TextDecoder().decode(result.stdout).trim().split("\n").filter(Boolean);
+
+    // If goal.jsonld was only touched once, this is an original project
+    if (timestamps.length <= 1) return null;
+
+    // Multiple touches: the most recent one (timestamps[0]) is the fork commit
+    // where goal.jsonld was rewritten for the new domain
+    return new Date(timestamps[0]).toISOString();
+  } catch {
+    return null;
+  }
+}
+
 /** Compute SevoScore for a completed cycle */
 export async function computeSevoScore(
   cycleId: string,
@@ -48,28 +78,48 @@ export async function computeSevoScore(
   bestEqs: number,
   avgFitness: number,
 ): Promise<SevoScoreNode> {
-  // Get previous SevoScore for cumulative total
-  const previousScores = await queryNodes<SevoScoreNode>("sevoscore");
-  const previousTotal = previousScores.length > 0
-    ? previousScores.sort((a, b) => b.timestamp.localeCompare(a.timestamp))[0].score
-    : 0;
+  // Detect fork point from git history — if this is a forked project,
+  // only count nodes created after the fork, not inherited data.
+  const domain = await readDomain();
+  const forkPoint = await detectForkPoint();
+  if (forkPoint) {
+    console.log(`  Fork detected — only scoring nodes after ${forkPoint}`);
+  }
+  const afterFork = forkPoint
+    ? <T extends { timestamp: string }>(n: T) => n.timestamp >= forkPoint
+    : <T>(_n: T) => true;
 
-  // Count events created during this cycle (by cycleId match or recent timestamp)
-  const allFitness = await queryNodes<FitnessNode>("fitness", (n) => n.cycleId === cycleId);
-  const allMutations = await queryNodes<MutationNode>("mutation");
-  const allSelections = await queryNodes<SelectionNode>("selection");
-  const allNoveltys = await queryNodes<NoveltyNode>("novelty");
-  const allCrossovers = await queryNodes<CrossoverNode>("crossover");
-  const allSeedImprovements = await queryNodes<SeedImprovementNode>("seedimprovement");
-  const allBenchmarks = await queryNodes<BenchmarkNode>("benchmark");
-  const allAgents = await queryNodes<AgentNode>("agent");
+  // Count events — filtered by forkPoint if this is a forked project
+  const allFitness = (await queryNodes<FitnessNode>("fitness", (n) => n.cycleId === cycleId)).filter(afterFork);
+  const allMutations = (await queryNodes<MutationNode>("mutation")).filter(afterFork);
+  const allSelections = (await queryNodes<SelectionNode>("selection")).filter(afterFork);
+  const allNoveltys = (await queryNodes<NoveltyNode>("novelty")).filter(afterFork);
+  const allCrossovers = (await queryNodes<CrossoverNode>("crossover")).filter(afterFork);
+  const allSeedImprovements = (await queryNodes<SeedImprovementNode>("seedimprovement")).filter(afterFork);
+  const allBenchmarks = (await queryNodes<BenchmarkNode>("benchmark")).filter(afterFork);
+  const allAgents = (await queryNodes<AgentNode>("agent")).filter(afterFork);
   const activeAgents = allAgents.filter((a) => a.status === "active");
 
-  // Count cycle-specific events by matching cycleId in timestamps
-  // For nodes without cycleId, count total and diff from last score
-  const prevBreakdown = previousScores.length > 0
-    ? previousScores.sort((a, b) => b.timestamp.localeCompare(a.timestamp))[0].breakdown
-    : null;
+  // Get previous SevoScore for cumulative total.
+  // For forked projects, we need to find scores that were computed with fork-aware
+  // filtering. A fork-aware score will have a metadata.forkPoint field.
+  const allPreviousScores = await queryNodes<SevoScoreNode>("sevoscore");
+  let latestPrevious: SevoScoreNode | null = null;
+  if (forkPoint) {
+    // Only use previous scores that have forkPoint metadata (fork-aware)
+    const forkAware = allPreviousScores.filter(
+      (s) => (s.metadata as Record<string, unknown>).forkPoint === forkPoint
+    );
+    latestPrevious = forkAware.length > 0
+      ? forkAware.sort((a, b) => b.timestamp.localeCompare(a.timestamp))[0]
+      : null;
+  } else {
+    latestPrevious = allPreviousScores.length > 0
+      ? allPreviousScores.sort((a, b) => b.timestamp.localeCompare(a.timestamp))[0]
+      : null;
+  }
+  const previousTotal = latestPrevious?.score ?? 0;
+  const prevBreakdown = latestPrevious?.breakdown ?? null;
 
   const totalMutations = allMutations.length;
   const totalSelections = allSelections.length;
@@ -126,7 +176,6 @@ export async function computeSevoScore(
     : 0;
 
   const evolvedLoc = await countEvolvedLoc();
-  const domain = await readDomain();
 
   const scoreNode: SevoScoreNode = {
     "@context": "sevo://v1",
@@ -158,7 +207,8 @@ export async function computeSevoScore(
       evolvedLoc,
       model: "claude-haiku-4-5",
       domain,
-    },
+      ...(forkPoint ? { forkPoint } : {}),
+    } as SevoScoreNode["metadata"],
   };
 
   await writeNode(scoreNode);
