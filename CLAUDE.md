@@ -134,6 +134,10 @@ Runtime:     Deno + TypeScript
              No Node. No npm. No package.json.
              TypeScript out of the box. No compile step.
 
+Packages:    npm install sevo-score   — types, scoring, contracts, auto-publish
+             npm install sevo-engine  — graph store, runner, scorer, mutator, selector
+             Both work in Deno: deno add npm:sevo-score npm:sevo-engine
+
 Persistence: Git
              Every graph write is a commit.
              Every mutation is a branch.
@@ -725,8 +729,10 @@ await publishScore(result.node, { name: "My Project" });
 ```
 
 **Links**:
-- npm: https://www.npmjs.com/package/sevo-score
-- GitHub: https://github.com/sjorsdev/sevo-score
+- sevo-score (npm): https://www.npmjs.com/package/sevo-score
+- sevo-engine (npm): https://www.npmjs.com/package/sevo-engine
+- sevo-score (GitHub): https://github.com/sjorsdev/sevo-score
+- sevo-engine (GitHub): https://github.com/sjorsdev/sevo-engine
 - Leaderboard: https://sevo-web-964388148061.europe-west1.run.app/score
 
 ---
