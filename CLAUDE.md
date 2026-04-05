@@ -185,6 +185,7 @@ sevo/
 │   ├── crossovers/              # crossover event nodes
 │   ├── noveltys/                # novelty score nodes
 │   ├── evolutionstrategys/      # meta-strategy tracking nodes
+│   ├── sevoscores/              # SevoScore snapshots (cumulative)
 │   └── meta/                    # seed improvement notes, fork decisions
 │
 ├── blueprints/                  # agent TypeScript blueprints
@@ -196,6 +197,7 @@ sevo/
 │   ├── git.ts                   # git operations
 │   ├── runner.ts                # sandboxed Deno subprocess runner
 │   ├── scorer.ts                # EQS computation (blended formula)
+│   ├── sevoscore.ts             # SevoScore — universal benchmark scoring
 │   ├── mutator.ts               # mutation proposals via LLM
 │   ├── selector.ts              # winner selection + diversity enforcement
 │   ├── benchmark.ts             # benchmark runner + evolution
@@ -335,6 +337,10 @@ export interface EvolutionStrategyNode extends SeVoNode {
   avgImprovement: number     // average fitness delta on success
   parameters: Record<string, number>  // tunable strategy parameters
 }
+
+// --- SevoScore — universal benchmark (see sevoscore.ts section) ---
+// SevoScoreNode defined in @anthropic-sevo/score package
+// Do not reimplement — import from the package
 ```
 
 ---
@@ -635,6 +641,79 @@ export async function score(
   return fitnessNode
 }
 ```
+
+---
+
+## sevoscore.ts — Universal benchmark scoring
+
+SevoScore is a cumulative, tamper-proof benchmark that every SEVO project
+computes locally and commits to `graph/sevoscores/`. The score is read
+directly from the git repo by sevoagents.com — no API push needed.
+
+**Install from npm** (canonical implementation — do not reimplement):
+```
+npm install @anthropic-sevo/score    # Node/Next.js
+deno add npm:@anthropic-sevo/score   # Deno
+```
+
+**Scoring formula** — points per evolution event:
+```
+agent created:           1
+agent improved:          1 + (eqsDelta × 10)
+fitness evaluated:       1
+mutation proposed:       1
+selection made:          1
+novelty recorded:        1
+crossover performed:     2
+seed improvement:        2
+benchmark evolved:       3
+```
+
+The score is cumulative — each cycle adds points to the running total.
+The score never decreases. Both properties are verified by sevoagents.com.
+
+**Fork detection**: When a project is forked from another SEVO project,
+the scoring library auto-detects this from git history (checks if
+goal.jsonld was modified after its initial creation). Forked projects
+only score graph nodes created after the fork point — inherited data
+is excluded. No manual configuration needed.
+
+**SevoScoreNode type**:
+```typescript
+export interface SevoScoreNode extends SeVoNode {
+  "@type": "SevoScore"
+  cycleId: string
+  score: number              // cumulative total
+  cyclePoints: number        // points earned this cycle
+  breakdown: {
+    agentsCreated: number
+    agentsImproved: number
+    fitnessEvaluations: number
+    mutationsProposed: number
+    selectionsMade: number
+    noveltysRecorded: number
+    crossoversPerformed: number
+    seedImprovements: number
+    benchmarksEvolved: number
+    improvementBonus: number // sum of eqsDelta × 10
+  }
+  metadata: {
+    totalAgents: number
+    activeAgents: number
+    bestAgentId: string
+    bestEqs: number
+    avgFitness: number
+    maxBenchmarkDifficulty: number
+    evolvedLoc: number       // total lines across all blueprints
+    model: string
+    domain: string
+  }
+}
+```
+
+**Integration**: Call `computeSevoScore()` at the end of each evolution cycle.
+The function reads graph data, computes the score, and writes a SevoScoreNode
+to `graph/sevoscores/`. The sevoagents.com leaderboard reads this directory.
 
 ---
 
