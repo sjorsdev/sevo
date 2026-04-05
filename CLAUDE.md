@@ -339,7 +339,7 @@ export interface EvolutionStrategyNode extends SeVoNode {
 }
 
 // --- SevoScore — universal benchmark (see sevoscore.ts section) ---
-// SevoScoreNode defined in @anthropic-sevo/score package
+// SevoScoreNode defined in sevo-score package (npm)
 // Do not reimplement — import from the package
 ```
 
@@ -652,8 +652,8 @@ directly from the git repo by sevoagents.com — no API push needed.
 
 **Install from npm** (canonical implementation — do not reimplement):
 ```
-npm install @anthropic-sevo/score    # Node/Next.js
-deno add npm:@anthropic-sevo/score   # Deno
+npm install sevo-score    # Node/Next.js
+deno add npm:sevo-score   # Deno
 ```
 
 **Scoring formula** — points per evolution event:
