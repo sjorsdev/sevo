@@ -12,12 +12,31 @@ export async function implement(
 ): Promise<ImplementResult> {
   console.log("\n=== IMPLEMENT (L2) ===");
 
-  if (thinkResult.ideas.length === 0) {
+  // Pick from ALL accumulated ideas — current THINK + graph learnings
+  // Prioritize ideas that mention "implement", "ready", or have high priority
+  const allIdeas = [
+    ...thinkResult.ideas.map(i => ({ ...i, source: "current-think" })),
+  ];
+
+  // Also scan learnings for implementable proposals
+  for (const learning of project.learnings.slice(0, 20)) {
+    if (learning.includes("IDEA") || learning.includes("Proposal") || learning.includes("implement")) {
+      allIdeas.push({
+        idea: learning,
+        fields: ["from-graph"],
+        math: "",
+        testable: "",
+        source: "accumulated",
+      });
+    }
+  }
+
+  if (allIdeas.length === 0) {
     return { phase: "implement", success: false, summary: "no proposals", branch: "", filesModified: [], merged: false };
   }
 
-  // Pick the most actionable idea
-  const idea = thinkResult.ideas[0];
+  // Pick the most actionable — prefer current THINK ideas first, then accumulated
+  const idea = allIdeas[0];
   console.log(`  Implementing: ${idea.idea.slice(0, 100)}`);
 
   // Create implementation branch

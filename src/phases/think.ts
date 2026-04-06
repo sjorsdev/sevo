@@ -13,14 +13,13 @@ export async function think(project: ProjectState, reflectSummary: string): Prom
 
 ${context}
 
-THINK creatively across disciplines:
-- MATH: topology, fractals, group theory, dynamical systems
-- BIOLOGY: morphogenesis, evo-devo, symbiosis, gene regulatory networks
-- PHYSICS: phase transitions, criticality, entropy, coupled oscillators
-- MUSIC: harmony, counterpoint, rhythm, tension/resolution
-- ART: composition, negative space, contrast, narrative
+The LEARNINGS above contain previously generated ideas. Some may be ready to implement.
+Your job: either REFINE an existing idea into something implementable, or generate something truly new.
+Do NOT repeat ideas that already exist — build on them or go in a new direction.
 
-Generate 3 NOVEL ideas combining at least 2 fields. Each must have mathematical grounding and be testable.
+Cross-pollinate between: math, biology, physics, music, art, topology, dynamical systems.
+
+Generate 3 ideas. At least 1 should be a refinement of an existing idea ready for implementation.
 
 JSON only:
 {
