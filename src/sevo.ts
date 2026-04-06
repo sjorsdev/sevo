@@ -799,12 +799,18 @@ while (true) {
     let mutationNode: MutationNode | null = null;
 
     if (action === "crossover" && islandAgents.length >= 2) {
-      // Pick two best agents on this island
-      const sorted = islandAgents
-        .map((a) => ({ agent: a, eqs: resultMap.get(a["@id"])?.fitness.eqs ?? 0 }))
-        .sort((a, b) => b.eqs - a.eqs);
-      const p1 = sorted[0].agent;
-      const p2 = sorted[1]?.agent ?? sorted[0].agent;
+      // Tournament selection — prevents inbreeding from always picking top-2
+      const tournamentSize = Math.min(3, islandAgents.length);
+      function tournamentPick(exclude?: string): AgentNode {
+        const candidates = islandAgents.filter(a => a["@id"] !== exclude);
+        const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+        const tournament = shuffled.slice(0, tournamentSize);
+        return tournament.sort((a, b) =>
+          (resultMap.get(b["@id"])?.fitness.eqs ?? 0) - (resultMap.get(a["@id"])?.fitness.eqs ?? 0)
+        )[0];
+      }
+      const p1 = tournamentPick();
+      const p2 = tournamentPick(p1["@id"]);
 
       const crossResult = await crossoverAgents(p1, p2, benchmark, strategy);
       if (crossResult) {

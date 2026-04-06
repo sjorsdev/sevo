@@ -156,17 +156,24 @@ export async function computeSevoScore(
     }
   }
 
-  // Calculate cycle points
+  // Calculate cycle points — v2: reward quality not volume
+  const uniqueWinners = new Set(recentSelections.map(s => s.winner)).size;
+  const improvementRate = cycleAgentsCreated > 0
+    ? agentsImproved / cycleAgentsCreated
+    : 0;
+
   let cyclePoints = 0;
-  cyclePoints += Math.max(cycleAgentsCreated, 0) * 1;       // 1pt per agent created
-  cyclePoints += improvementBonus;                            // fitness_delta × 10 for improvements
-  cyclePoints += allFitness.length * 1;                       // 1pt per fitness evaluation
-  cyclePoints += Math.max(cycleMutations, 0) * 1;            // 1pt per mutation
-  cyclePoints += Math.max(cycleSelections, 0) * 1;           // 1pt per selection
-  cyclePoints += Math.max(cycleNoveltys, 0) * 1;             // 1pt per novelty
-  cyclePoints += Math.max(cycleCrossovers, 0) * 2;           // 2pts per crossover
-  cyclePoints += Math.max(cycleSeedImprovements, 0) * 2;     // 2pts per seed improvement
+  cyclePoints += agentsImproved * 10;                        // 10pts per agent that beat its parent
+  cyclePoints += improvementBonus;                            // eqsDelta × 10 for each improvement
+  cyclePoints += improvementRate * 20;                        // 0-20pts for improvement rate
+  cyclePoints += uniqueWinners * 3;                           // 3pts per unique winner (diversity)
+  cyclePoints += Math.min(allFitness.length, 5) * 0.5;       // capped activity points (max 2.5)
   cyclePoints += Math.max(cycleBenchmarks, 0) * 3;           // 3pts per benchmark evolved
+  cyclePoints += Math.max(cycleSeedImprovements, 0) * 2;     // 2pts per seed improvement
+  // Penalize all-failure cycles
+  if (cycleAgentsCreated > 0 && agentsImproved === 0) {
+    cyclePoints -= cycleAgentsCreated;
+  }
 
   const cumulativeScore = previousTotal + cyclePoints;
 

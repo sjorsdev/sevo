@@ -11,6 +11,7 @@ export interface DiscoveryReport {
     | "crossover_success"
     | "novelty_discovery"
     | "benchmark_evolution"
+    | "domain_insight"
     | "general";
   data: Record<string, unknown>;
 }
@@ -39,9 +40,45 @@ export async function generateInstanceId(): Promise<string> {
   return _instanceId;
 }
 
+/** Pull learnings from the discovery server for a domain */
+export async function pullLearnings(
+  domain: string,
+  since?: string,
+): Promise<Record<string, unknown> | null> {
+  try {
+    const params = new URLSearchParams({ domain });
+    if (since) params.set("since", since);
+    const resp = await fetch(`${DISCOVERIES_URL}/pull?${params}`, {
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!resp.ok) return null;
+    return await resp.json();
+  } catch {
+    return null;
+  }
+}
+
+/** Format pulled learnings as a string for injection into mutation prompts */
+export function formatLearnings(learnings: Record<string, unknown> | null): string {
+  if (!learnings) return "";
+  const parts: string[] = [];
+  const recs = learnings.recommendations as Record<string, unknown> | undefined;
+  if (recs?.topPriority && recs.topPriority !== "none") {
+    parts.push(`Focus: ${recs.topPriority}`);
+  }
+  const insights = learnings.crossInsights as Array<Record<string, unknown>> | undefined;
+  if (insights?.length) {
+    for (const i of insights.slice(0, 3)) {
+      parts.push(`- From ${i.domain}: ${i.pattern ?? i.insight ?? ""}`);
+    }
+  }
+  return parts.length > 0 ? `\nLEARNINGS FROM OTHER SEVO PROJECTS:\n${parts.join("\n")}` : "";
+}
+
 export async function reportDiscovery(
   reportType: DiscoveryReport["reportType"],
   data: Record<string, unknown>,
+  domain?: string,
 ): Promise<void> {
   try {
     const report: DiscoveryReport = {

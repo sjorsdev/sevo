@@ -83,29 +83,50 @@ After making changes:
 
 Do NOT modify graph/ files or PROGRESS.md. Only modify src/ and blueprints/.`;
 
-  const result = await callClaudeEdit({
-    prompt,
-    model: "sonnet",
-    projectDir: project.path,
-    timeoutMs: 300_000,
-  });
-
-  // Check what changed
+  // Try implementation — retry with more direct prompt if first attempt produces no changes
+  const MAX_IMPL_ATTEMPTS = 5;
   let filesModified: string[] = [];
-  try {
-    const diff = await new Deno.Command("git", {
-      args: ["diff", "main", "--name-only"],
-      cwd: project.path,
-      stdout: "piped",
-    }).output();
-    filesModified = new TextDecoder().decode(diff.stdout).trim().split("\n").filter(Boolean);
-  } catch { /* no diff */ }
+
+  for (let implAttempt = 1; implAttempt <= MAX_IMPL_ATTEMPTS; implAttempt++) {
+    const attemptPrompt = implAttempt === 1 ? prompt :
+      `${prompt}\n\nIMPORTANT: The previous attempt made NO changes. You MUST edit at least one file.
+Pick the single most relevant src/ file and make a concrete change. Even a small improvement counts.
+Do not just analyze — actually modify the file using the Edit tool, then git add and git commit.`;
+
+    try {
+      const result = await callClaudeEdit({
+        prompt: attemptPrompt,
+        model: "sonnet",
+        projectDir: project.path,
+        timeoutMs: 300_000,
+      });
+
+      if (!result.success) {
+        console.log(`  [implement] attempt ${implAttempt}/${MAX_IMPL_ATTEMPTS} failed: ${result.output.slice(0, 200)}`);
+      }
+    } catch (e) {
+      console.log(`  [implement] attempt ${implAttempt}/${MAX_IMPL_ATTEMPTS} error: ${(e as Error).message.slice(0, 200)}`);
+    }
+
+    // Check what changed
+    try {
+      const diff = await new Deno.Command("git", {
+        args: ["diff", "main", "--name-only"],
+        cwd: project.path,
+        stdout: "piped",
+      }).output();
+      filesModified = new TextDecoder().decode(diff.stdout).trim().split("\n").filter(Boolean);
+    } catch { /* no diff */ }
+
+    if (filesModified.length > 0) break;
+    console.log(`  [implement] attempt ${implAttempt}: no changes detected, ${implAttempt < MAX_IMPL_ATTEMPTS ? "retrying with stronger prompt..." : "giving up."}`);
+  }
 
   if (filesModified.length === 0) {
-    console.log("  No changes made. Abandoning branch.");
+    console.log("  No changes after all attempts. Abandoning branch.");
     await new Deno.Command("git", { args: ["checkout", "main"], cwd: project.path }).output();
     await new Deno.Command("git", { args: ["branch", "-D", branchName], cwd: project.path }).output().catch(() => {});
-    return { phase: "implement", success: false, summary: "no changes", branch: branchName, filesModified: [], merged: false };
+    return { phase: "implement", success: false, summary: "no changes after retries", branch: branchName, filesModified: [], merged: false };
   }
 
   console.log(`  Modified: ${filesModified.join(", ")}`);

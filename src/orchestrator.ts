@@ -57,19 +57,56 @@ async function runMetaCycle(projectPath: string, cycle: number): Promise<void> {
   if (shouldImplement && thinkResult.ideas.length > 0) {
     console.log(`\n  Implementing (layer=${reflectResult.layer}, cycle=${cycle}, accumulated=${project.learnings.length})`);
 
-    const implResult = await implement(project, thinkResult);
+    // Try each idea — if implementation fails test, try to fix it before moving on
+    let implemented = false;
+    for (let ideaIdx = 0; ideaIdx < thinkResult.ideas.length && !implemented; ideaIdx++) {
+      const singleIdeaThink = { ...thinkResult, ideas: [thinkResult.ideas[ideaIdx]] };
+      console.log(`  Trying idea ${ideaIdx + 1}/${thinkResult.ideas.length}: ${thinkResult.ideas[ideaIdx].idea?.slice(0, 80)}`);
 
-    if (implResult.success) {
-      // TEST — verify changes work
-      const testResult = await test(project, implResult);
+      const implResult = await implement(project, singleIdeaThink);
 
-      if (testResult.passed) {
-        await mergeImplementation(project, implResult.branch);
-        console.log("  Implementation MERGED — engine evolved.");
+      if (implResult.success) {
+        // TEST — verify changes work, retry fix if test fails
+        const MAX_FIX_ATTEMPTS = 20;
+        let testResult = await test(project, implResult);
+        let lastTestError = "";
+        let sameTestErrorCount = 0;
+
+        for (let fixAttempt = 1; fixAttempt <= MAX_FIX_ATTEMPTS && !testResult.passed; fixAttempt++) {
+          // Detect loops: if same error 3 times in a row, stop
+          const currentError = testResult.output.slice(0, 300);
+          if (currentError === lastTestError) { sameTestErrorCount++; } else { sameTestErrorCount = 0; lastTestError = currentError; }
+          if (sameTestErrorCount >= 3) { console.log(`  Same error 3x in a row — stuck.`); break; }
+
+          console.log(`  Test failed (fix attempt ${fixAttempt}), asking LLM to fix...`);
+
+          // Feed the error back to implement phase to fix it
+          const fixThink = {
+            ...singleIdeaThink,
+            ideas: [{
+              ...singleIdeaThink.ideas[0],
+              idea: `FIX THE PREVIOUS IMPLEMENTATION. It failed type checking with:\n${testResult.output}\n\nOriginal idea: ${singleIdeaThink.ideas[0].idea}`,
+            }],
+          };
+          // Re-implement on the same branch (already checked out)
+          await implement(project, fixThink);
+          testResult = await test(project, implResult);
+        }
+
+        if (testResult.passed) {
+          await mergeImplementation(project, implResult.branch);
+          console.log("  Implementation MERGED — engine evolved.");
+          implemented = true;
+        } else {
+          await abandonImplementation(project, implResult.branch);
+          console.log(`  Idea ${ideaIdx + 1} unfixable (loop detected or max retries) — trying next idea...`);
+        }
       } else {
-        await abandonImplementation(project, implResult.branch);
-        console.log("  Implementation FAILED test — reverted.");
+        console.log(`  Idea ${ideaIdx + 1} produced no changes — trying next idea...`);
       }
+    }
+    if (!implemented) {
+      console.log("  All ideas failed to implement. Will retry next cycle.");
     }
   } else if (reflectResult.layer === 1) {
     console.log("\n  Layer 1: Agent evolution (run simulation loop separately)");
