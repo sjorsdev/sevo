@@ -7,8 +7,11 @@ export async function reflect(project: ProjectState): Promise<ReflectResult> {
   console.log("\n=== REFLECT ===");
 
   // Check if there are unimplemented ideas waiting
+  // Learnings are stored as "[priority] observation → suggestion"
   const unimplementedIdeas = project.learnings.filter(l =>
-    l.includes("IDEA") || l.includes("Proposal") || l.includes("thinking-")
+    l.includes("IDEA") || l.includes("Proposal") || l.includes("thinking") ||
+    l.includes("Orchestrator THINK") || l.includes("brainstorm") ||
+    l.includes("ideas generated") || parseInt(l.match(/^\[(\d+)\]/)?.[1] ?? "0") >= 8
   ).length;
 
   const hasOrganismV2 = project.srcFiles.includes("organism-v2.ts");
