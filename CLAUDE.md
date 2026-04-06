@@ -28,11 +28,8 @@ improvement_signal = (accuracy × magnitude) / (branches_explored × prediction_
 # Create a new project
 deno run --allow-all sevo/src/cli.ts init my-project
 
-# Run agent evolution
-deno run --allow-all sevo/src/cli.ts evolve /path/to/project
-
-# Run meta-evolution (REFLECT→THINK→IMPLEMENT→TEST→REALIGN)
-deno run --allow-all sevo/src/cli.ts orchestrate /path/to/project
+# Run evolution (agents + engine in one unified loop)
+deno run --allow-all sevo/src/cli.ts run /path/to/project
 
 # Compute SevoScore
 deno run --allow-all sevo/src/cli.ts score /path/to/project
@@ -53,9 +50,9 @@ deno run --allow-all src/fork-runner.ts
 ## Architecture
 
 All source is in `src/`. Key modules:
-- `cli.ts` — entry point
-- `sevo.ts` — main evolution loop (island model, crossover, novelty search, adaptive mutation)
-- `orchestrator.ts` — meta-cycle: REFLECT→THINK→IMPLEMENT→TEST→REALIGN
+- `cli.ts` — entry point (run, score, init)
+- `orchestrator.ts` — unified loop: EVOLVE→REFLECT→THINK→IMPLEMENT→TEST→REALIGN
+- `sevo.ts` — agent evolution engine (island model, crossover, novelty search)
 - `types.ts` — all graph node interfaces
 - `graph.ts` — append-only JSON-LD store
 - `runner.ts` — sandboxed Deno subprocess execution

@@ -52,6 +52,31 @@ async function runMetaCycle(projectPath: string, cycle: number): Promise<void> {
   // THINK — always, creative reasoning drives breakthroughs
   const thinkResult = await think(project, reflectResult.summary);
 
+  // EVOLVE — always run agent evolution (Layer 1 is not "skip", it's "evolve agents")
+  if (reflectResult.layer === 1) {
+    console.log("\n  EVOLVE — running agent evolution cycle");
+    try {
+      // Import and run one cycle of the domain's fork-runner or core sevo.ts
+      const forkRunner = `${project.path}/src/fork-runner.ts`;
+      try {
+        await Deno.stat(forkRunner);
+        const denoPath = `${Deno.env.get("HOME")}/.deno/bin/deno`;
+        const cmd = new Deno.Command(denoPath, {
+          args: ["run", "--allow-all", forkRunner],
+          cwd: project.path,
+          stdout: "inherit",
+          stderr: "inherit",
+          signal: AbortSignal.timeout(600_000), // 10 min max
+        });
+        await cmd.output();
+      } catch {
+        console.log("  No fork-runner.ts found, skipping agent evolution");
+      }
+    } catch (e) {
+      console.log(`  Evolution error: ${(e as Error).message.slice(0, 100)}`);
+    }
+  }
+
   // IMPLEMENT — when Layer 2+, OR every 5 cycles if there are accumulated ideas
   const shouldImplement = reflectResult.layer >= 2 || (cycle % 5 === 0 && project.learnings.length > 10);
   if (shouldImplement && thinkResult.ideas.length > 0) {
@@ -108,8 +133,6 @@ async function runMetaCycle(projectPath: string, cycle: number): Promise<void> {
     if (!implemented) {
       console.log("  All ideas failed to implement. Will retry next cycle.");
     }
-  } else if (reflectResult.layer === 1) {
-    console.log("\n  Layer 1: Agent evolution (run simulation loop separately)");
   }
 
   // REALIGN — check goal alignment

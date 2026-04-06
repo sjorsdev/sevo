@@ -18,8 +18,7 @@ Usage:
   deno run --allow-all src/cli.ts <command> <path>
 
 Commands:
-  evolve <path>        Run agent evolution loop
-  orchestrate <path>   Run meta-evolution cycle
+  run <path>           Run evolution (agents + engine, unified loop)
   score <path>         Compute SevoScore
   init <name>          Create a new sevo project`);
   Deno.exit(0);
@@ -76,21 +75,15 @@ exit 0
   console.log(`Created ${name}/`);
   console.log(`  Edit goal.jsonld to define your fitness metric`);
   console.log(`  Add blueprints/agent-v1.ts as your first agent`);
-  console.log(`  Run: deno run --allow-all ${sevoRoot}cli.ts evolve ${dir}`);
+  console.log(`  Run: deno run --allow-all ${sevoRoot}cli.ts run ${dir}`);
   Deno.exit(0);
 }
 
 const projectPath = target ? (target.startsWith("/") ? target : join(Deno.cwd(), target)) : Deno.cwd();
 
-if (command === "evolve") {
-  // Import and run the evolution loop
-  const sevoMod = join(sevoRoot, "sevo.ts");
-  Deno.chdir(projectPath);
-  await import(sevoMod);
-} else if (command === "orchestrate") {
-  // Import and run the orchestrator
+if (command === "run") {
+  // Unified loop: orchestrator handles both agent evolution + engine evolution
   const orchMod = join(sevoRoot, "orchestrator.ts");
-  // Orchestrator reads project path from args
   Deno.args.splice(0, Deno.args.length, projectPath);
   await import(orchMod);
 } else if (command === "score") {
