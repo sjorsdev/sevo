@@ -1,34 +1,47 @@
 // src/phases/reflect.ts — Analyze fitness trends, detect which layer is stuck
 
-import { callClaude, extractJSON } from "../claude-cli.ts";
-import { buildContext, type ProjectState } from "../context.ts";
+import type { ProjectState } from "../context.ts";
 import type { ReflectResult } from "./types.ts";
 
 export async function reflect(project: ProjectState): Promise<ReflectResult> {
   console.log("\n=== REFLECT ===");
 
-  const history = project.fitnessHistory;
-  const recent = history.slice(-10);
-  const older = history.slice(-20, -10);
+  // Check if there are unimplemented ideas waiting
+  const unimplementedIdeas = project.learnings.filter(l =>
+    l.includes("IDEA") || l.includes("Proposal") || l.includes("thinking-")
+  ).length;
 
-  const recentAvg = recent.length > 0 ? recent.reduce((a, b) => a + b, 0) / recent.length : 0;
-  const olderAvg = older.length > 0 ? older.reduce((a, b) => a + b, 0) / older.length : 0;
-  const delta = recentAvg - olderAvg;
+  const hasOrganismV2 = project.srcFiles.includes("organism-v2.ts");
+  const hasSim = project.srcFiles.includes("sim.ts");
 
-  const plateauing = recent.length >= 5 && Math.abs(delta) < 0.5;
-  const trend = delta > 1 ? "improving" : delta < -1 ? "declining" : "plateau";
+  // Real assessment: is the simulation actually producing better results?
+  // If PROGRESS.md mentions "plateau" or fitness is stuck, that's real
+  const progressMentionsPlateau = project.progress.toLowerCase().includes("plateau") ||
+    project.progress.toLowerCase().includes("stuck") ||
+    project.progress.toLowerCase().includes("rebuild");
 
-  // Detect which layer to evolve at
+  // Check if there's code that's been built but not integrated
+  const hasUnintegratedCode = hasOrganismV2 && project.progress.includes("needs integration");
+
+  // Layer detection — be aggressive about implementing
   let layer: 1 | 2 | 3 = 1;
-  if (plateauing && history.length > 20) layer = 2;
-  if (plateauing && history.length > 50) {
-    // Check if engine-level changes have been attempted
-    const engineAttempts = project.learnings.filter(l => l.includes("implement") || l.includes("redesign")).length;
-    if (engineAttempts >= 3) layer = 3;
-  }
 
-  const summary = `Trend: ${trend} (recent: ${recentAvg.toFixed(1)}, delta: ${delta.toFixed(2)}). ` +
-    `${history.length} cycles. ${plateauing ? `PLATEAU → Layer ${layer}` : `Layer 1 (improving)`}`;
+  // If there are unimplemented ideas AND the system has been running a while → Layer 2
+  if (unimplementedIdeas > 5) layer = 2;
+
+  // If PROGRESS says plateau or rebuild needed → Layer 2
+  if (progressMentionsPlateau) layer = 2;
+
+  // If there's unintegrated code waiting → Layer 2
+  if (hasUnintegratedCode) layer = 2;
+
+  // If many cycles with no structural change → Layer 3
+  if (unimplementedIdeas > 20 && progressMentionsPlateau) layer = 3;
+
+  const summary = `${unimplementedIdeas} unimplemented ideas. ` +
+    `${hasUnintegratedCode ? "organism-v2 NOT integrated. " : ""}` +
+    `${progressMentionsPlateau ? "PLATEAU detected in PROGRESS.md. " : ""}` +
+    `→ Layer ${layer}`;
 
   console.log(`  ${summary}`);
 
@@ -37,8 +50,8 @@ export async function reflect(project: ProjectState): Promise<ReflectResult> {
     success: true,
     summary,
     layer,
-    plateauing,
-    trend,
-    delta,
+    plateauing: layer >= 2,
+    trend: layer === 1 ? "improving" : "plateau",
+    delta: 0,
   };
 }

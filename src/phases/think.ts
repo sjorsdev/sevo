@@ -36,6 +36,26 @@ JSON only:
       for (const idea of parsed.ideas) {
         console.log(`  IDEA [${idea.fields?.join("+")}]: ${idea.idea?.slice(0, 100)}`);
       }
+
+      // PERSIST ideas to graph — don't throw them away
+      try {
+        const nodeContent = {
+          "@context": "sevo://v1",
+          "@type": "SeedImprovement",
+          "@id": `thinking-orchestrator-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          observation: `Orchestrator THINK: ${parsed.ideas.length} ideas generated.`,
+          suggestion: parsed.ideas.map(i => `[${i.fields?.join("+")}] ${i.idea} — Math: ${i.math}`).join("; "),
+          evidence: ["orchestrator-think-phase"],
+          priority: 8,
+        };
+        const nodePath = `${project.path}/graph/seedimprovements/${nodeContent["@id"].replace(/[^a-z0-9-]/gi, "-")}.jsonld`;
+        await Deno.mkdir(`${project.path}/graph/seedimprovements`, { recursive: true });
+        await Deno.writeTextFile(nodePath, JSON.stringify(nodeContent, null, 2));
+        await new Deno.Command("git", { args: ["add", nodePath], cwd: project.path }).output();
+        await new Deno.Command("git", { args: ["commit", "-m", `graph: orchestrator THINK — ${parsed.ideas.length} ideas`], cwd: project.path }).output();
+      } catch { /* graph write may fail, don't block */ }
+
       return { phase: "think", success: true, summary: `${parsed.ideas.length} ideas`, ideas: parsed.ideas };
     }
   } catch (e) {

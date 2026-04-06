@@ -52,8 +52,11 @@ async function runMetaCycle(projectPath: string, cycle: number): Promise<void> {
   // THINK — always, creative reasoning drives breakthroughs
   const thinkResult = await think(project, reflectResult.summary);
 
-  // IMPLEMENT — if Layer 2+ and we have ideas
-  if (reflectResult.layer >= 2 && thinkResult.ideas.length > 0) {
+  // IMPLEMENT — when Layer 2+, OR every 5 cycles if there are accumulated ideas
+  const shouldImplement = reflectResult.layer >= 2 || (cycle % 5 === 0 && project.learnings.length > 10);
+  if (shouldImplement && thinkResult.ideas.length > 0) {
+    console.log(`\n  Implementing (layer=${reflectResult.layer}, cycle=${cycle}, accumulated=${project.learnings.length})`);
+
     const implResult = await implement(project, thinkResult);
 
     if (implResult.success) {
