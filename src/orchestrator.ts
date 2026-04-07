@@ -409,6 +409,12 @@ async function benchmark(project: ProjectState): Promise<BenchmarkResult> {
   const scores: Array<{ agentId: string; fitness: number }> = [];
 
   for (const agent of agents) {
+    // Skip agents whose blueprint file doesn't exist
+    try { await Deno.stat(agent.blueprint); } catch {
+      console.log(`  ${agent["@id"]}: blueprint missing (${agent.blueprint}) — skipping`);
+      continue;
+    }
+
     try {
       const result = await run(agent.blueprint, {
         ...SEVO_PERMISSIONS,
