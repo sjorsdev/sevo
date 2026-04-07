@@ -334,21 +334,31 @@ JSON only:
         for (const issue of parsed.issues) console.log(`    Issue: ${issue}`);
       }
 
-      // If not approved, try to fix (up to 20 attempts, loop detection)
+      // If not approved, try to fix (up to 10 attempts, detect stuck)
       if (!parsed.approved && parsed.fix_suggestion) {
         let lastError = "";
         let sameErrorCount = 0;
+        let editFailCount = 0;
 
-        for (let fixAttempt = 1; fixAttempt <= 20; fixAttempt++) {
+        for (let fixAttempt = 1; fixAttempt <= 10; fixAttempt++) {
           console.log(`  Fixing (attempt ${fixAttempt}): ${parsed.fix_suggestion.slice(0, 100)}`);
+          let editSuccess = false;
           try {
-            await callClaudeEdit({
+            const editResult = await callClaudeEdit({
               prompt: `Fix this implementation. Issues: ${parsed.issues.join("; ")}. Suggestion: ${parsed.fix_suggestion}. Git add and commit.`,
               model: "sonnet",
               projectDir: project.path,
               timeoutMs: 180_000,
             });
+            editSuccess = editResult.success;
           } catch { /* ok */ }
+
+          if (!editSuccess) {
+            editFailCount++;
+            if (editFailCount >= 3) { console.log(`  callClaudeEdit failed 3x in a row — giving up.`); break; }
+          } else {
+            editFailCount = 0;
+          }
 
           // Re-check
           const reReview = await callClaude({
