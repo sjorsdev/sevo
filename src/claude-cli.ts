@@ -109,7 +109,8 @@ export async function callClaudeEdit(options: ClaudeEditOptions): Promise<{
     const stderr = new TextDecoder().decode(result.stderr).trim();
 
     if (!result.success) {
-      console.error(`  [claude-edit] failed: ${stderr.slice(0, 300)}`);
+      const msg = stderr || stdout || "(no output)";
+      console.error(`  [claude-edit] failed: ${msg.slice(0, 300)}`);
     }
 
     return {
