@@ -11,6 +11,7 @@ export interface AgentNode extends SeVoNode {
   "@type": "Agent";
   blueprint: string;
   parent?: string;
+  parents?: string[];
   generation: number;
   status: "active" | "testing" | "dormant" | "archived";
   domain?: string;
