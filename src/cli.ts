@@ -34,15 +34,16 @@ if (command === "init") {
   await Deno.mkdir(join(dir, "blueprints"), { recursive: true });
   await Deno.mkdir(join(dir, "src"), { recursive: true });
 
-  // goal.jsonld
-  await Deno.writeTextFile(join(dir, "goal.jsonld"), JSON.stringify({
-    "@context": "sevo://v1",
-    "@type": "Goal",
-    "@id": `goal:${name}`,
-    name: `${name} evolution goal`,
-    metric: "Define your fitness metric here",
-    note: "Edit this file to define what your agents optimize for",
-  }, null, 2));
+  // goal.md
+  await Deno.writeTextFile(join(dir, "goal.md"), `---
+id: ${name}
+metric: "Define your fitness metric here"
+---
+
+# ${name}
+
+Describe what your agents should optimize for.
+`);
 
   // deno.json import map pointing to sevo core
   const relSevo = sevoRoot.endsWith("/") ? sevoRoot.slice(0, -1) : sevoRoot;
@@ -73,7 +74,7 @@ exit 0
   await new Deno.Command("git", { args: ["commit", "-m", "init: sevo project"], cwd: dir }).output();
 
   console.log(`Created ${name}/`);
-  console.log(`  Edit goal.jsonld to define your fitness metric`);
+  console.log(`  Edit goal.md to define your fitness metric`);
   console.log(`  Add blueprints/agent-v1.ts as your first agent`);
   console.log(`  Run: deno run --allow-all ${sevoRoot}cli.ts run ${dir}`);
   Deno.exit(0);

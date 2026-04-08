@@ -1,6 +1,6 @@
 # SEVO — Self-Evolving Agent System
 
-SEVO is an application that evolves agents toward a measurable goal. Point it at any project with a `goal.jsonld`, and it runs autonomous evolution: mutate, benchmark, score, select, repeat. It measures its own evolutionary quality (EQS) and gets better at evolving over time.
+SEVO is an application that evolves agents toward a measurable goal. Point it at any project with a `goal.md`, and it runs autonomous evolution: mutate, benchmark, score, select, repeat. It measures its own evolutionary quality (EQS) and gets better at evolving over time.
 
 ## Constitutional Constraints (immutable)
 
@@ -35,22 +35,22 @@ deno run --allow-all sevo/src/cli.ts run /path/to/project
 deno run --allow-all sevo/src/cli.ts score /path/to/project
 ```
 
-## Creating a Fork
+## Using SEVO on your own project
 
 ```bash
-mkdir my-domain && cd my-domain
-deno run --allow-all ../sevo/src/cli.ts init .
-# Edit goal.jsonld with your domain's fitness metric
+deno run --allow-all sevo/src/cli.ts init my-domain
+cd my-domain
+# Edit goal.md with your domain's fitness metric
 # Write blueprints/agent-v1.ts as your first agent
-# Create a deno.json with: {"imports": {"sevo/": "../sevo/src/"}}
-# Write src/fork-runner.ts for domain-specific evolution logic
-deno run --allow-all src/fork-runner.ts
+# Optionally write src/fork-runner.ts for domain-specific evolution logic
+deno run --allow-all ../sevo/src/cli.ts run .
 ```
 
 ## Architecture
 
 All source is in `src/`. Key modules:
 - `cli.ts` — entry point (run, score, init)
+- `goal.ts` — goal loader (goal.md preferred, goal.jsonld fallback)
 - `orchestrator.ts` — unified loop: EVOLVE→REFLECT→THINK→IMPLEMENT→TEST→REALIGN
 - `sevo.ts` — agent evolution engine (island model, crossover, novelty search)
 - `types.ts` — all graph node interfaces

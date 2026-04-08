@@ -94,13 +94,13 @@ async function think(project: ProjectState, reflectResult: ReflectResult): Promi
   const agentList = agents.map(a => `${a["@id"]} (gen ${a.generation})`).join(", ");
 
   // Pull cross-project insights
-  const domain = (project.goal as Record<string, string>)["@id"]?.replace("goal:", "") ?? "unknown";
+  const domain = project.domain;
   const learnings = await pullLearnings(domain);
   const crossContext = formatLearnings(learnings);
 
   const prompt = `You are the brain of a SEVO evolution system.
 
-PROJECT: ${(project.goal as Record<string, string>).name ?? "unknown"}
+PROJECT: ${project.goal.name}
 ACTIVE AGENTS: ${agentList || "none"}
 TREND: ${reflectResult.trend} (delta: ${reflectResult.delta.toFixed(4)})
 BEST FITNESS: ${reflectResult.bestFitness.toFixed(3)}
@@ -598,7 +598,7 @@ while (true) {
     reportDiscovery("eqs_milestone", {
       cycle, action: thinkResult.action, improved: selectResult.improved,
       bestFitness: benchmarkResult.bestFitness, bestAgent: benchmarkResult.bestAgent,
-    }, (project.goal as Record<string, string>)["@id"]?.replace("goal:", ""));
+    }, project.domain);
 
   } catch (e) {
     console.error(`\nCycle ${cycle} failed: ${(e as Error).message}`);

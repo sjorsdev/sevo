@@ -1,17 +1,13 @@
 // src/context.ts — Assemble context from a sevo project's repo state
 // Each phase gets only what it needs. The repo IS the memory.
 
-import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-
-const exec = promisify(execFile);
+import { loadGoal, type Goal } from "./goal.ts";
 
 export interface ProjectState {
   path: string;
   progress: string;                // PROGRESS.md contents
-  goal: Record<string, unknown>;   // goal.jsonld parsed
+  goal: Goal;                      // parsed from goal.md or goal.jsonld
   domain: string;
   gitLog: string;                  // last 20 commits
   learnings: string[];             // seedimprovement summaries
@@ -28,13 +24,9 @@ export async function loadProject(projectPath: string): Promise<ProjectState> {
   let progress = "";
   try { progress = await Deno.readTextFile(join(abs, "PROGRESS.md")); } catch { /* none */ }
 
-  // goal.jsonld
-  let goal: Record<string, unknown> = {};
-  let domain = "unknown";
-  try {
-    goal = JSON.parse(await Deno.readTextFile(join(abs, "goal.jsonld")));
-    domain = (goal["@id"] as string)?.replace("goal:", "") ?? "unknown";
-  } catch { /* none */ }
+  // goal.md (preferred) or goal.jsonld (fallback)
+  const goal = await loadGoal(abs);
+  const domain = goal.id;
 
   // git log
   let gitLog = "";
@@ -104,7 +96,7 @@ export function buildContext(
   const sections: string[] = [];
 
   sections.push(`PROJECT: ${project.domain}`);
-  sections.push(`GOAL: ${(project.goal as Record<string, string>).name ?? "unknown"}`);
+  sections.push(`GOAL: ${project.goal.name}`);
 
   if (project.progress) {
     sections.push(`\nPROGRESS:\n${project.progress.slice(0, 2000)}`);

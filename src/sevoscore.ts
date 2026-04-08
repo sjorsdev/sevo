@@ -30,12 +30,12 @@ async function countEvolvedLoc(): Promise<number> {
   return totalLines;
 }
 
-/** Read project domain from goal.jsonld */
+/** Read project domain from goal.md or goal.jsonld */
 async function readDomain(): Promise<string> {
   try {
-    const text = await Deno.readTextFile("./goal.jsonld");
-    const goal = JSON.parse(text);
-    return goal.name ?? "unknown";
+    const { loadGoal } = await import("./goal.ts");
+    const goal = await loadGoal(".");
+    return goal.name;
   } catch {
     return "unknown";
   }
@@ -43,32 +43,33 @@ async function readDomain(): Promise<string> {
 
 /**
  * Detect fork point from git history.
- * If goal.jsonld was modified after its initial creation, this repo was forked
+ * If the goal file was modified after its initial creation, this repo was forked
  * from another sevo project. The modification timestamp is the fork point —
  * only graph nodes created after that point belong to this project.
- * Returns null for original (non-forked) projects where goal.jsonld was only
+ * Returns null for original (non-forked) projects where the goal was only
  * ever created once.
  */
 async function detectForkPoint(): Promise<string | null> {
-  try {
-    // Get all commits that touched goal.jsonld, newest first
-    const cmd = new Deno.Command("git", {
-      args: ["log", "--format=%aI", "--", "goal.jsonld"],
-      stdout: "piped",
-      stderr: "piped",
-    });
-    const result = await cmd.output();
-    const timestamps = new TextDecoder().decode(result.stdout).trim().split("\n").filter(Boolean);
+  // Check both goal.md and goal.jsonld — whichever has history
+  for (const filename of ["goal.md", "goal.jsonld"]) {
+    try {
+      const cmd = new Deno.Command("git", {
+        args: ["log", "--format=%aI", "--", filename],
+        stdout: "piped",
+        stderr: "piped",
+      });
+      const result = await cmd.output();
+      const timestamps = new TextDecoder().decode(result.stdout).trim().split("\n").filter(Boolean);
 
-    // If goal.jsonld was only touched once, this is an original project
-    if (timestamps.length <= 1) return null;
+      if (timestamps.length <= 1) continue;
 
-    // Multiple touches: the most recent one (timestamps[0]) is the fork commit
-    // where goal.jsonld was rewritten for the new domain
-    return new Date(timestamps[0]).toISOString();
-  } catch {
-    return null;
+      // Multiple touches: the most recent one (timestamps[0]) is the fork commit
+      return new Date(timestamps[0]).toISOString();
+    } catch {
+      continue;
+    }
   }
+  return null;
 }
 
 /** Compute SevoScore for a completed cycle */

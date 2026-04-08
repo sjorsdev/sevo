@@ -1,6 +1,8 @@
 // src/mod.ts — SEVO public API
 // Import from this file in fork projects: import { writeNode } from "sevo/mod.ts"
 
+export { loadGoal, goalFilename } from "./goal.ts";
+export type { Goal } from "./goal.ts";
 export { writeNode, readNode, queryNodes, archiveNode } from "./graph.ts";
 export { git } from "./git.ts";
 export { run, SEVO_PERMISSIONS } from "./runner.ts";
