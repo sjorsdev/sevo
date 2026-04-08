@@ -7,6 +7,7 @@ import type {
   AgentNode,
   FitnessNode,
   MutationNode,
+  DecisionRecordNode,
   SelectionNode,
   NoveltyNode,
   CrossoverNode,
@@ -93,6 +94,7 @@ export async function computeSevoScore(
   // Count events — filtered by forkPoint if this is a forked project
   const allFitness = (await queryNodes<FitnessNode>("fitness", (n) => n.cycleId === cycleId)).filter(afterFork);
   const allMutations = (await queryNodes<MutationNode>("mutation")).filter(afterFork);
+  const allDecisions = (await queryNodes<DecisionRecordNode>("decisionrecord")).filter(afterFork);
   const allSelections = (await queryNodes<SelectionNode>("selection")).filter(afterFork);
   const allNoveltys = (await queryNodes<NoveltyNode>("novelty")).filter(afterFork);
   const allCrossovers = (await queryNodes<CrossoverNode>("crossover")).filter(afterFork);
@@ -122,7 +124,7 @@ export async function computeSevoScore(
   const previousTotal = latestPrevious?.score ?? 0;
   const prevBreakdown = latestPrevious?.breakdown ?? null;
 
-  const totalMutations = allMutations.length;
+  const totalMutations = allMutations.length + allDecisions.length;
   const totalSelections = allSelections.length;
   const totalNoveltys = allNoveltys.length;
   const totalCrossovers = allCrossovers.length;

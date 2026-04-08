@@ -1,5 +1,7 @@
 // src/phases/types.ts — Phase result interfaces
 
+import type { DecisionScope } from "../types.ts";
+
 export interface PhaseResult {
   phase: string;
   success: boolean;
@@ -28,6 +30,13 @@ export interface ThinkResult extends PhaseResult {
   target?: string;       // agent @id, benchmark @id, or src file
   target2?: string;      // second parent for crossover
   proposal: string;      // what specifically to do
+  // Structured spec (why/what/how)
+  decisionId: string;
+  scope: DecisionScope;
+  evidence: string[];
+  acceptanceCriteria: string[];
+  expectedImpact: { metric: string; direction: string; magnitude?: string };
+  approach: { strategy: string; filesExpected?: string[]; constraints?: string[] };
 }
 
 export interface ImplementResult extends PhaseResult {
@@ -37,9 +46,9 @@ export interface ImplementResult extends PhaseResult {
 }
 
 export interface ReviewResult extends PhaseResult {
-  planMatchesImplementation: boolean;
-  issues: string[];      // discrepancies between plan and implementation
-  approved: boolean;     // should we proceed to benchmark?
+  criteriaResults: Array<{ criterion: string; met: boolean; evidence: string }>;
+  issues: string[];
+  approved: boolean;
 }
 
 export interface BenchmarkResult extends PhaseResult {

@@ -30,6 +30,9 @@ import type {
   MutationNode,
   SelectionNode,
   SeedImprovementNode,
+  DecisionRecordNode,
+  DecisionOutcomeNode,
+  DecisionScope,
 } from "./types.ts";
 import type {
   ReflectResult,
@@ -40,6 +43,24 @@ import type {
   SelectResult,
   ActionType,
 } from "./phases/types.ts";
+
+function inferScope(action: ActionType): DecisionScope {
+  if (action === "mutate_agent") return "tactical";
+  if (action === "modify_engine") return "architectural";
+  return "strategic";
+}
+
+function formatSpec(t: ThinkResult): string {
+  return `DECISION SPEC:
+  What: ${t.proposal}
+  Why: ${t.reasoning}
+  Acceptance Criteria:
+${t.acceptanceCriteria.map(c => `    - ${c}`).join("\n")}
+  Strategy: ${t.approach.strategy}
+  Constraints: ${t.approach.constraints?.join("; ") ?? "none"}
+
+Your implementation MUST satisfy ALL acceptance criteria.`;
+}
 
 // ---------------------------------------------------------------------------
 // REFLECT — what's happening, what are the opportunities?
@@ -98,7 +119,9 @@ async function think(project: ProjectState, reflectResult: ReflectResult): Promi
   const learnings = await pullLearnings(domain);
   const crossContext = formatLearnings(learnings);
 
-  const prompt = `You are the brain of a SEVO evolution system.
+  const cycleId = `cycle-${Date.now()}`;
+
+  const prompt = `You are the brain of a SEVO evolution system. Think in terms of WHY, WHAT, and HOW.
 
 PROJECT: ${project.goal.name}
 ACTIVE AGENTS: ${agentList || "none"}
@@ -120,34 +143,95 @@ Consider: what gives the most value RIGHT NOW? Not what's stuck — what's the b
 JSON only:
 {
   "action": "mutate_agent|crossover|new_agent|evolve_benchmark|modify_engine",
-  "reasoning": "why this action, why now",
+  "evidence": ["specific data points that motivate this decision"],
+  "reasoning": "why this action over alternatives, grounded in the evidence",
   "target": "agent @id, benchmark @id, or src filename (if applicable)",
   "target2": "second agent @id (for crossover only, omit otherwise)",
-  "proposal": "specific description of what to change"
-}`;
+  "proposal": "specific description of what to change",
+  "acceptanceCriteria": ["criterion 1: specific, verifiable from the git diff", "criterion 2: ..."],
+  "expectedImpact": {
+    "metric": "fitness|accuracy|diversity|benchmark_difficulty",
+    "direction": "increase|decrease|maintain",
+    "magnitude": "minor|moderate|significant"
+  },
+  "approach": {
+    "strategy": "how to implement this",
+    "filesExpected": ["file1.ts"],
+    "constraints": ["preserve X", "don't break Y"]
+  }
+}
+
+IMPORTANT: Each acceptance criterion must be verifiable from the git diff alone.
+Bad: "improve performance". Good: "add memoization cache to fibonacci function".`;
 
   try {
     const response = await callClaude({ prompt, model: "sonnet", timeoutMs: 120_000 });
     const parsed = extractJSON<{
       action: ActionType;
+      evidence?: string[];
       reasoning: string;
       target?: string;
       target2?: string;
       proposal: string;
+      acceptanceCriteria?: string[];
+      expectedImpact?: { metric: string; direction: string; magnitude?: string };
+      approach?: { strategy: string; filesExpected?: string[]; constraints?: string[] };
     }>(response);
 
     if (parsed) {
-      console.log(`  Action: ${parsed.action}`);
+      const scope = inferScope(parsed.action);
+      const decisionId = `decision-${Date.now()}`;
+      const evidence = parsed.evidence ?? [reflectResult.trend, `best=${reflectResult.bestFitness}`];
+      const acceptanceCriteria = parsed.acceptanceCriteria ?? ["At least one file is modified"];
+      const expectedImpact = parsed.expectedImpact ?? { metric: "fitness", direction: "increase" };
+      const approach = parsed.approach ?? { strategy: parsed.proposal };
+
+      console.log(`  Action: ${parsed.action} [${scope}]`);
       console.log(`  Reasoning: ${parsed.reasoning.slice(0, 120)}`);
-      console.log(`  Proposal: ${parsed.proposal.slice(0, 120)}`);
+      console.log(`  Criteria: ${acceptanceCriteria.join("; ").slice(0, 120)}`);
+
+      // Write DecisionRecord to graph
+      const record: DecisionRecordNode = {
+        "@context": "sevo://v1",
+        "@type": "DecisionRecord",
+        "@id": decisionId,
+        timestamp: new Date().toISOString(),
+        cycleId,
+        action: parsed.action,
+        scope,
+        context: {
+          trend: reflectResult.trend,
+          bestFitness: reflectResult.bestFitness,
+          fitnessDelta: reflectResult.delta,
+          opportunities: reflectResult.opportunities,
+          evidence,
+        },
+        decision: {
+          target: parsed.target,
+          target2: parsed.target2,
+          proposal: parsed.proposal,
+          acceptanceCriteria,
+          expectedImpact: expectedImpact as DecisionRecordNode["decision"]["expectedImpact"],
+          reasoning: parsed.reasoning,
+        },
+        approach,
+      };
+      try { await writeNode(record); } catch { /* ok if graph dir issues */ }
+
       return {
         phase: "think", success: true,
-        summary: `${parsed.action}: ${parsed.proposal.slice(0, 80)}`,
+        summary: `[${scope}] ${parsed.action}: ${parsed.proposal.slice(0, 80)}`,
         action: parsed.action,
         reasoning: parsed.reasoning,
         target: parsed.target,
         target2: parsed.target2,
         proposal: parsed.proposal,
+        decisionId,
+        scope,
+        evidence,
+        acceptanceCriteria,
+        expectedImpact,
+        approach,
       };
     }
   } catch (e) {
@@ -156,6 +240,7 @@ JSON only:
 
   // Fallback: mutate best agent
   const best = agents[0];
+  const fallbackId = `decision-${Date.now()}`;
   return {
     phase: "think", success: true,
     summary: "fallback: mutate best agent",
@@ -163,6 +248,12 @@ JSON only:
     reasoning: "THINK failed, defaulting to mutation",
     target: best?.["@id"],
     proposal: "Improve the agent's test coverage and edge case handling",
+    decisionId: fallbackId,
+    scope: "tactical",
+    evidence: ["THINK phase failed"],
+    acceptanceCriteria: ["At least one file is modified", "Agent produces valid fitness output"],
+    expectedImpact: { metric: "fitness", direction: "increase" },
+    approach: { strategy: "generic improvement" },
   };
 }
 
@@ -184,6 +275,8 @@ async function implement(project: ProjectState, thinkResult: ThinkResult): Promi
   let implPrompt = "";
   const srcContents: string[] = [];
 
+  const spec = formatSpec(thinkResult);
+
   if (thinkResult.action === "modify_engine") {
     // Read relevant src files
     for (const file of project.srcFiles.slice(0, 5)) {
@@ -193,8 +286,7 @@ async function implement(project: ProjectState, thinkResult: ThinkResult): Promi
       } catch { /* ok */ }
     }
     implPrompt = `Modify the SEVO engine source files.
-PROPOSAL: ${thinkResult.proposal}
-REASONING: ${thinkResult.reasoning}
+${spec}
 SOURCE FILES:\n${srcContents.join("\n\n")}
 Only modify src/ files. Git add and commit your changes.`;
   } else if (thinkResult.action === "mutate_agent" || thinkResult.action === "new_agent") {
@@ -207,8 +299,7 @@ Only modify src/ files. Git add and commit your changes.`;
       }
     }
     implPrompt = `${thinkResult.action === "new_agent" ? "Create a new" : "Mutate an existing"} agent blueprint.
-PROPOSAL: ${thinkResult.proposal}
-REASONING: ${thinkResult.reasoning}
+${spec}
 ${agentCode ? `CURRENT CODE:\n${agentCode.slice(0, 3000)}` : ""}
 Write the complete TypeScript blueprint to blueprints/. It must output JSON on the last line: {"fitness": <0-1>, ...}
 Git add and commit.`;
@@ -221,14 +312,13 @@ Git add and commit.`;
     if (p1) try { p1Code = await Deno.readTextFile(p1.blueprint); } catch { /* ok */ }
     if (p2) try { p2Code = await Deno.readTextFile(p2.blueprint); } catch { /* ok */ }
     implPrompt = `Crossover: combine the best traits of two agents into a new one.
-PROPOSAL: ${thinkResult.proposal}
+${spec}
 PARENT 1 (${p1?.["@id"]}):\n${p1Code.slice(0, 2000)}
 PARENT 2 (${p2?.["@id"]}):\n${p2Code.slice(0, 2000)}
 Write the combined blueprint to blueprints/. Git add and commit.`;
   } else if (thinkResult.action === "evolve_benchmark") {
     implPrompt = `Evolve the benchmark to test agents more rigorously.
-PROPOSAL: ${thinkResult.proposal}
-REASONING: ${thinkResult.reasoning}
+${spec}
 Write an updated benchmark to graph/benchmarks/. Git add and commit.`;
   }
 
@@ -277,7 +367,7 @@ async function review(
   console.log("\n=== REVIEW ===");
 
   if (!implResult.success) {
-    return { phase: "review", success: true, summary: "nothing to review", planMatchesImplementation: false, issues: ["no changes made"], approved: false };
+    return { phase: "review", success: true, summary: "nothing to review", criteriaResults: [], issues: ["no changes made"], approved: false };
   }
 
   // Get the actual diff
@@ -294,26 +384,32 @@ async function review(
     diffContent += "\n\n" + new TextDecoder().decode(fullDiff.stdout).trim().slice(0, 3000);
   } catch { /* ok */ }
 
-  // Ask LLM to compare plan vs implementation
-  const prompt = `Review this implementation against the original plan.
+  // Check each acceptance criterion individually
+  const criteriaList = thinkResult.acceptanceCriteria
+    .map((c, i) => `${i + 1}. ${c}`)
+    .join("\n");
 
-PLAN:
-Action: ${thinkResult.action}
-Proposal: ${thinkResult.proposal}
-Reasoning: ${thinkResult.reasoning}
+  const prompt = `Review this implementation against specific acceptance criteria.
+
+ACCEPTANCE CRITERIA:
+${criteriaList}
+
+EXPECTED APPROACH: ${thinkResult.approach.strategy}
+CONSTRAINTS: ${thinkResult.approach.constraints?.join("; ") ?? "none"}
 
 IMPLEMENTATION (git diff):
 ${diffContent.slice(0, 4000)}
 
-Check:
-1. Does the implementation match the plan? (not just "does it compile" — does it do what was proposed?)
-2. Are there obvious bugs, syntax errors, or logic mistakes?
-3. Does it maintain the constitutional constraints (append-only history, no agent dominance)?
+For EACH criterion, determine if it is met by the implementation.
+Also check for obvious bugs, syntax errors, or constitutional violations (append-only history, no agent dominance).
 
 JSON only:
 {
-  "matches_plan": true/false,
-  "issues": ["list of problems found, empty if none"],
+  "criteriaResults": [
+    {"criterion": "the criterion text", "met": true/false, "evidence": "why it is/isn't met"}
+  ],
+  "bugs": ["list of bugs found, empty if none"],
+  "constitutionalOk": true/false,
   "approved": true/false,
   "fix_suggestion": "if not approved, what to fix"
 }`;
@@ -321,18 +417,27 @@ JSON only:
   try {
     const response = await callClaude({ prompt, model: "sonnet", timeoutMs: 120_000 });
     const parsed = extractJSON<{
-      matches_plan: boolean;
-      issues: string[];
+      criteriaResults?: Array<{ criterion: string; met: boolean; evidence: string }>;
+      bugs?: string[];
+      constitutionalOk?: boolean;
       approved: boolean;
       fix_suggestion?: string;
     }>(response);
 
     if (parsed) {
-      console.log(`  Plan matches: ${parsed.matches_plan}`);
+      const criteriaResults = parsed.criteriaResults ?? [];
+      const metCount = criteriaResults.filter(r => r.met).length;
+      console.log(`  Criteria: ${metCount}/${criteriaResults.length} met`);
       console.log(`  Approved: ${parsed.approved}`);
-      if (parsed.issues.length) {
-        for (const issue of parsed.issues) console.log(`    Issue: ${issue}`);
+      for (const r of criteriaResults) {
+        console.log(`    ${r.met ? "PASS" : "FAIL"}: ${r.criterion.slice(0, 80)}`);
       }
+
+      const issues = [
+        ...criteriaResults.filter(r => !r.met).map(r => `${r.criterion}: ${r.evidence}`),
+        ...(parsed.bugs ?? []),
+        ...(parsed.constitutionalOk === false ? ["constitutional violation"] : []),
+      ];
 
       // If not approved, try to fix (up to 10 attempts, detect stuck)
       if (!parsed.approved && parsed.fix_suggestion) {
@@ -340,12 +445,17 @@ JSON only:
         let sameErrorCount = 0;
         let editFailCount = 0;
 
+        const failedCriteria = criteriaResults
+          .filter(r => !r.met)
+          .map(r => `${r.criterion} (${r.evidence})`)
+          .join("; ");
+
         for (let fixAttempt = 1; fixAttempt <= 10; fixAttempt++) {
           console.log(`  Fixing (attempt ${fixAttempt}): ${parsed.fix_suggestion.slice(0, 100)}`);
           let editSuccess = false;
           try {
             const editResult = await callClaudeEdit({
-              prompt: `Fix this implementation. Issues: ${parsed.issues.join("; ")}. Suggestion: ${parsed.fix_suggestion}. Git add and commit.`,
+              prompt: `Fix this implementation. Failed criteria: ${failedCriteria}. Bugs: ${(parsed.bugs ?? []).join("; ")}. Suggestion: ${parsed.fix_suggestion}. Git add and commit.`,
               model: "sonnet",
               projectDir: project.path,
               timeoutMs: 180_000,
@@ -369,7 +479,7 @@ JSON only:
           const reResult = extractJSON<{ approved: boolean; issue?: string }>(reReview);
           if (reResult?.approved) {
             console.log(`  Fixed after ${fixAttempt} attempts`);
-            return { phase: "review", success: true, summary: "approved after fix", planMatchesImplementation: true, issues: [], approved: true };
+            return { phase: "review", success: true, summary: "approved after fix", criteriaResults: criteriaResults.map(r => ({ ...r, met: true })), issues: [], approved: true };
           }
 
           // Loop detection
@@ -381,9 +491,9 @@ JSON only:
 
       return {
         phase: "review", success: true,
-        summary: parsed.approved ? "approved" : `rejected: ${parsed.issues.join("; ")}`,
-        planMatchesImplementation: parsed.matches_plan,
-        issues: parsed.issues,
+        summary: parsed.approved ? "approved" : `rejected: ${issues.join("; ").slice(0, 200)}`,
+        criteriaResults,
+        issues,
         approved: parsed.approved,
       };
     }
@@ -392,7 +502,7 @@ JSON only:
   }
 
   // If review itself fails, default to approved (don't block evolution)
-  return { phase: "review", success: true, summary: "review skipped", planMatchesImplementation: true, issues: [], approved: true };
+  return { phase: "review", success: true, summary: "review skipped", criteriaResults: [], issues: [], approved: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -454,6 +564,8 @@ async function select_phase(
   project: ProjectState,
   benchmarkResult: BenchmarkResult,
   thinkResult: ThinkResult,
+  reviewResult: ReviewResult,
+  preBenchmarkBest: number,
 ): Promise<SelectResult> {
   console.log("\n=== SELECT ===");
 
@@ -489,20 +601,47 @@ async function select_phase(
   }
 
   // Did this cycle improve things?
-  const prevBest = sorted.length > 1 ? (agentScores.get(sorted[1]?.["@id"]) ?? 0) : 0;
-  const improved = benchmarkResult.bestFitness > prevBest;
+  const improved = benchmarkResult.bestFitness > preBenchmarkBest;
 
   console.log(`  Kept: ${kept.length}, Archived: ${archived.length}, Improved: ${improved}`);
 
-  // Record as SeedImprovement
+  // Record DecisionOutcome — the consequences of this cycle's decision
+  const outcomeNode: DecisionOutcomeNode = {
+    "@context": "sevo://v1",
+    "@type": "DecisionOutcome",
+    "@id": `outcome-${thinkResult.decisionId}-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    decisionId: thinkResult.decisionId,
+    cycleId: thinkResult.decisionId.replace("decision-", "cycle-"),
+    review: {
+      criteriaResults: reviewResult.criteriaResults,
+      approved: reviewResult.approved,
+    },
+    outcome: {
+      bestFitnessBefore: preBenchmarkBest,
+      bestFitnessAfter: benchmarkResult.bestFitness,
+      fitnessDelta: benchmarkResult.bestFitness - preBenchmarkBest,
+      improved,
+    },
+    lessons: {
+      whatWorked: improved ? `[${thinkResult.scope}] ${thinkResult.proposal}` : "",
+      whatDidnt: improved ? "" : `[${thinkResult.scope}] ${thinkResult.proposal}`,
+      suggestion: improved
+        ? `${thinkResult.action} with scope=${thinkResult.scope} worked — similar approaches may help`
+        : `${thinkResult.action} did not improve fitness — try different approach`,
+    },
+  };
+  try { await writeNode(outcomeNode); } catch { /* ok */ }
+
+  // Also record as SeedImprovement (backward compat with reporter.ts and sevoscore.ts)
   const learning: SeedImprovementNode = {
     "@context": "sevo://v1",
     "@type": "SeedImprovement",
     "@id": `learning-${Date.now()}`,
     timestamp: new Date().toISOString(),
-    observation: `Cycle: action=${thinkResult.action}, improved=${improved}, best=${benchmarkResult.bestFitness.toFixed(3)}`,
+    observation: `[${thinkResult.scope}] ${thinkResult.action}: improved=${improved}, best=${benchmarkResult.bestFitness.toFixed(3)}`,
     suggestion: improved ? thinkResult.proposal : `${thinkResult.action} did not improve fitness — try different approach`,
-    evidence: [thinkResult.action, benchmarkResult.bestAgent],
+    evidence: [thinkResult.decisionId, thinkResult.action, benchmarkResult.bestAgent],
     priority: improved ? 3 : 7,
   };
   try { await writeNode(learning); } catch { /* ok */ }
@@ -561,16 +700,22 @@ while (true) {
 
     // 1. REFLECT
     const reflectResult = await reflect(project);
+    const preBenchmarkBest = reflectResult.bestFitness;
 
-    // 2. THINK — decide what to do
+    // 2. THINK — decide what to do (writes DecisionRecord to graph)
     const thinkResult = await think(project, reflectResult);
 
     // 3. IMPLEMENT — do it
     const implResult = await implement(project, thinkResult);
 
+    // 4. REVIEW — check acceptance criteria
+    let reviewResult: ReviewResult = {
+      phase: "review", success: false, summary: "skipped",
+      criteriaResults: [], issues: [], approved: false,
+    };
+
     if (implResult.success) {
-      // 4. REVIEW — check plan vs implementation
-      const reviewResult = await review(project, thinkResult, implResult);
+      reviewResult = await review(project, thinkResult, implResult);
 
       if (reviewResult.approved) {
         // Merge implementation to main
@@ -588,8 +733,8 @@ while (true) {
     // 5. BENCHMARK — always run, regardless of whether we implemented something
     const benchmarkResult = await benchmark(project);
 
-    // 6. SELECT — keep winners, archive losers
-    const selectResult = await select_phase(project, benchmarkResult, thinkResult);
+    // 6. SELECT — keep winners, archive losers (writes DecisionOutcome to graph)
+    const selectResult = await select_phase(project, benchmarkResult, thinkResult, reviewResult, preBenchmarkBest);
 
     // Checkpoint
     await updateProgress(project, cycle, thinkResult, benchmarkResult, selectResult);

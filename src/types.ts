@@ -151,6 +151,71 @@ export interface SevoScoreNode extends SeVoNode {
   };
 }
 
+// --- Decision Records (spec-driven evolution: why/what/how) ---
+
+import type { ActionType } from "./phases/types.ts";
+
+export type DecisionScope = "tactical" | "strategic" | "architectural";
+
+export interface DecisionRecordNode extends SeVoNode {
+  "@type": "DecisionRecord";
+  cycleId: string;
+  action: ActionType;
+  scope: DecisionScope;
+
+  // WHY — evidence and motivation (filled by REFLECT + THINK)
+  context: {
+    trend: "improving" | "declining" | "plateau";
+    bestFitness: number;
+    fitnessDelta: number;
+    opportunities: string[];
+    evidence: string[];
+  };
+
+  // WHAT — verifiable decision (filled by THINK)
+  decision: {
+    target?: string;
+    target2?: string;
+    proposal: string;
+    acceptanceCriteria: string[];
+    expectedImpact: {
+      metric: string;
+      direction: "increase" | "decrease" | "maintain";
+      magnitude?: string;
+    };
+    reasoning: string;
+  };
+
+  // HOW — implementation approach (filled by THINK, minimal for tactical)
+  approach: {
+    strategy: string;
+    filesExpected?: string[];
+    constraints?: string[];
+  };
+}
+
+// Separate node because graph is append-only (can't update DecisionRecord after creation)
+export interface DecisionOutcomeNode extends SeVoNode {
+  "@type": "DecisionOutcome";
+  decisionId: string;
+  cycleId: string;
+  review: {
+    criteriaResults: Array<{ criterion: string; met: boolean; evidence: string }>;
+    approved: boolean;
+  };
+  outcome: {
+    bestFitnessBefore: number;
+    bestFitnessAfter: number;
+    fitnessDelta: number;
+    improved: boolean;
+  };
+  lessons: {
+    whatWorked: string;
+    whatDidnt: string;
+    suggestion: string;
+  };
+}
+
 // --- Discovery Report Types (for sevoagents.com reporting) ---
 
 export interface DiscoveryReport {
